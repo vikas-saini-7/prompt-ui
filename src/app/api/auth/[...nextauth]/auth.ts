@@ -3,8 +3,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import bcrypt from "bcrypt";
-import clientPromise from "./mongodb";
-import { User, userCollectionName } from "@/models/User";
+import { User, userCollectionName } from "@/lib/db/models/User";
+import clientPromise from "@/lib/db/mongodb";
 
 if (!process.env.NEXTAUTH_SECRET) {
   throw new Error("NEXTAUTH_SECRET is not defined");

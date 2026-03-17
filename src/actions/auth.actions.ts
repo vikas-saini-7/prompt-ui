@@ -1,8 +1,8 @@
 "use server";
 
 import bcrypt from "bcrypt";
-import clientPromise from "@/lib/mongodb";
-import { User, userCollectionName } from "@/models/User";
+import clientPromise from "@/lib/db/mongodb";
+import { User, userCollectionName } from "@/lib/db/models/User";
 
 export async function signupWithEmail(
   name: string,
@@ -56,10 +56,12 @@ export async function signupWithEmail(
 
     // Return success with email - client will handle signin and redirect
     return { success: true, email, password };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
     console.error("Signup error caught:", error);
-    console.error("Error message:", error?.message);
-    console.error("Error stack:", error?.stack);
+    console.error("Error message:", errorMessage);
+    console.error("Error stack:", errorStack);
     return { error: "Signup failed. Please try again." };
   }
 }
