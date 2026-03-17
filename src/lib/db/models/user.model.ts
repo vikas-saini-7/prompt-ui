@@ -7,8 +7,8 @@ export interface User {
   password?: string;
   image?: string;
   provider?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export const userCollectionName = "users";

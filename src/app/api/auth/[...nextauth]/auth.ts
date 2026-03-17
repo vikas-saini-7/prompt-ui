@@ -4,7 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import bcrypt from "bcrypt";
-import { User, userCollectionName } from "@/lib/db/models/User";
+import { User, userCollectionName } from "@/lib/db/models/user.model";
 import clientPromise from "@/lib/db/mongodb";
 
 if (!process.env.NEXTAUTH_SECRET) {

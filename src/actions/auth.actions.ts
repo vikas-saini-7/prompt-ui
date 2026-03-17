@@ -2,7 +2,7 @@
 
 import bcrypt from "bcrypt";
 import clientPromise from "@/lib/db/mongodb";
-import { User, userCollectionName } from "@/lib/db/models/User";
+import { User, userCollectionName } from "@/lib/db/models/user.model";
 
 export async function signupWithEmail(
   name: string,
