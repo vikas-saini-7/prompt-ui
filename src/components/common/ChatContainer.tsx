@@ -2,8 +2,8 @@
 
 import { useRef, useEffect } from "react";
 import { ChatMessage as ChatMessageType } from "@/types";
-import ChatMessage from "./chat-message";
-import Loader from "./loader";
+import ChatMessage from "./ChatMessage";
+import Loader from "./Loader";
 
 interface Props {
   messages: ChatMessageType[];

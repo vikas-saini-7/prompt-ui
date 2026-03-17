@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
-import { ChatProvider } from "@/lib/contexts/chat-context";
-import { UIProvider } from "@/lib/contexts/ui-context";
+import { ChatProvider } from "@/contexts/chat-context";
+import { UIProvider } from "@/contexts/ui-context";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 

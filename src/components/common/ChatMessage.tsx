@@ -2,7 +2,7 @@
 
 import { ChatMessage as ChatMessageType } from "@/types";
 import { Bot } from "lucide-react";
-import CodeBlock from "./code-block";
+import CodeBlock from "./CodeBlock";
 
 interface Props {
   message: ChatMessageType;

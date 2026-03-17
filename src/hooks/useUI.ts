@@ -1,7 +1,7 @@
 "use client";
 
 import { useContext } from "react";
-import { UIContext } from "@/lib/contexts/ui-context";
+import { UIContext } from "@/contexts/ui-context";
 
 export function useUI() {
   const context = useContext(UIContext);
