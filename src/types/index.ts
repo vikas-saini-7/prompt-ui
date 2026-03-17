@@ -1,3 +1,5 @@
+import React from "react";
+
 export interface ChatMessage {
   id: string;
   type: "user" | "ai";
@@ -33,5 +35,5 @@ export interface Model {
 export interface InputOption {
   id: string;
   label: string;
-  icon: unknown;
+  icon: React.ComponentType<{ className?: string }>;
 }
