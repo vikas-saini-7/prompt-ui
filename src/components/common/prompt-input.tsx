@@ -1,41 +1,45 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import {
-  Send,
-  Plus,
-  ChevronUp,
-  ChevronDown,
-  Upload,
-  Camera,
-} from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { Send, Plus, ChevronUp, ChevronDown } from "lucide-react";
+import { MODELS, INPUT_OPTIONS } from "@/lib/constants";
+import { Model } from "@/types";
 
 interface Props {
   onSubmit: (prompt: string) => void;
   onClear: () => void;
   isLoading?: boolean;
   disabled?: boolean;
+  selectedModel?: string;
+  onModelChange?: (modelId: string) => void;
+  models?: Model[];
+  options?: typeof INPUT_OPTIONS;
 }
-
-const MODELS = ["GPT-4", "GPT-3.5", "Claude 3", "Claude 2", "Gemini Pro"];
-
-const OPTIONS = [
-  { id: "upload", label: "Upload File", icon: Upload },
-  { id: "camera", label: "Camera", icon: Camera },
-];
 
 export default function PromptInput({
   onSubmit,
   onClear,
   isLoading = false,
   disabled = false,
+  selectedModel: initialModel,
+  onModelChange,
+  models = MODELS,
+  options = INPUT_OPTIONS,
 }: Props) {
   const [prompt, setPrompt] = useState("");
-  const [selectedModel, setSelectedModel] = useState(MODELS[0]);
+  const [selectedModel, setSelectedModel] = useState(
+    initialModel || MODELS[0]?.id || "gpt-4",
+  );
   const [showModels, setShowModels] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const modelContainerRef = useRef<HTMLDivElement>(null);
   const optionsContainerRef = useRef<HTMLDivElement>(null);
+
+  // Memoize current model display name
+  const currentModelName = useMemo(() => {
+    const model = models.find((m) => m.id === selectedModel);
+    return model?.name || selectedModel;
+  }, [selectedModel, models]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -74,20 +78,26 @@ export default function PromptInput({
     }
   };
 
+  const handleModelChange = (modelId: string) => {
+    setSelectedModel(modelId);
+    onModelChange?.(modelId);
+    setShowModels(false);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="w-full relative">
-      {/* Model Button - Absolutely Positioned */}
+      {/* Model Button */}
       <div
         ref={modelContainerRef}
-        className="absolute left-0 bottom-[calc(100%+0px)] "
+        className="absolute left-0 bottom-[calc(100%+0px)]"
       >
         <button
           type="button"
           onClick={() => setShowModels(!showModels)}
           disabled={isLoading || disabled}
-          className=" bg-[#0F0F0F] flex items-center gap-1 px-2 py-1 text-xs text-zinc-400 hover:text-[#00E87B] transition-colors disabled:opacity-50"
+          className="bg-[#0F0F0F] flex items-center gap-1 px-2 py-1 text-xs text-zinc-400 hover:text-[#00E87B] transition-colors disabled:opacity-50"
         >
-          <span>{selectedModel}</span>
+          <span>{currentModelName}</span>
           {showModels ? (
             <ChevronUp className="h-3 w-3" />
           ) : (
@@ -95,24 +105,20 @@ export default function PromptInput({
           )}
         </button>
 
-        {/* Models Dropdown */}
         {showModels && (
           <div className="absolute left-0 bottom-full mb-2 bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden shadow-lg z-50">
-            {MODELS.map((model) => (
+            {models.map((model) => (
               <button
-                key={model}
+                key={model.id}
                 type="button"
-                onClick={() => {
-                  setSelectedModel(model);
-                  setShowModels(false);
-                }}
+                onClick={() => handleModelChange(model.id)}
                 className={`w-full text-left px-3 py-2 text-xs transition-colors ${
-                  selectedModel === model
+                  selectedModel === model.id
                     ? "bg-[#00E87B] text-black"
                     : "text-zinc-400 hover:bg-zinc-800 hover:text-[#00E87B] whitespace-nowrap"
                 }`}
               >
-                {model}
+                {model.name}
               </button>
             ))}
           </div>
@@ -127,23 +133,21 @@ export default function PromptInput({
             type="button"
             onClick={() => setShowOptions(!showOptions)}
             disabled={isLoading || disabled}
-            className="h-8 w-8 flex items-center justify-center flex-shrink-0 rounded hover:bg-zinc-800 text-zinc-400 hover:text-[#00E87B] transition-colors disabled:opacity-50"
+            className="h-8 w-8 flex items-center justify-center shrink-0 rounded hover:bg-zinc-800 text-zinc-400 hover:text-[#00E87B] transition-colors disabled:opacity-50"
             title="More options"
           >
             <Plus className="h-5 w-5" />
           </button>
 
-          {/* Options Dropdown */}
           {showOptions && (
             <div className="absolute -left-2 bottom-[calc(100%+8px)] mb-2 bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden shadow-lg z-50">
-              {OPTIONS.map((option) => {
+              {options.map((option) => {
                 const IconComponent = option.icon;
                 return (
                   <button
                     key={option.id}
                     type="button"
                     onClick={() => {
-                      // Handle option click
                       console.log(`${option.id} clicked`);
                       setShowOptions(false);
                     }}
@@ -174,7 +178,7 @@ export default function PromptInput({
           type="submit"
           disabled={!prompt.trim() || isLoading || disabled}
           title="Generate (Ctrl+Enter)"
-          className="h-8 w-8 flex items-center justify-center flex-shrink-0 rounded bg-[#00E87B] text-black hover:bg-[#00E87B]/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 hover:scale-110 active:scale-95"
+          className="h-8 w-8 flex items-center justify-center shrink-0 rounded bg-[#00E87B] text-black hover:bg-[#00E87B]/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 hover:scale-110 active:scale-95"
         >
           <Send className="h-5 w-5" />
         </button>

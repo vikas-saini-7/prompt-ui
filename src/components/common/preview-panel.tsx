@@ -9,7 +9,7 @@ interface Props {
   isLoading?: boolean;
 }
 
-export default function PreviewPanel({ code, isLoading = false }: Props) {
+export default function PreviewPanel({ code }: Props) {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"preview" | "code">("preview");
   const [selectedFile, setSelectedFile] = useState("component.tsx");

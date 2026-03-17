@@ -5,9 +5,19 @@ import { Button } from "@/components/ui/button";
 
 interface Props {
   onToggleSidebar: () => void;
+  onSettingsClick?: () => void;
+  title?: string;
+  subtitle?: string;
+  logo?: React.ReactNode;
 }
 
-export default function AppNavbar({ onToggleSidebar }: Props) {
+export default function AppNavbar({
+  onToggleSidebar,
+  onSettingsClick,
+  title = "Prompt UI",
+  subtitle = "AI Component Generator",
+  logo,
+}: Props) {
   return (
     <nav className="border-b border-zinc-800 bg-[#0F0F0F]">
       <div className="flex h-16 items-center justify-between px-6">
@@ -22,13 +32,19 @@ export default function AppNavbar({ onToggleSidebar }: Props) {
             <Menu className="h-5 w-5" />
           </Button>
 
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#00E87B]">
-            <span className="text-sm font-bold text-black">P</span>
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-white">Prompt UI</h1>
-            <p className="text-xs text-zinc-500">AI Component Generator</p>
-          </div>
+          {logo ? (
+            logo
+          ) : (
+            <>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#00E87B]">
+                <span className="text-sm font-bold text-black">P</span>
+              </div>
+              <div>
+                <h1 className="text-lg font-semibold text-white">{title}</h1>
+                <p className="text-xs text-zinc-500">{subtitle}</p>
+              </div>
+            </>
+          )}
         </div>
 
         <Button
@@ -36,6 +52,7 @@ export default function AppNavbar({ onToggleSidebar }: Props) {
           size="icon"
           className="hover:bg-zinc-900"
           title="Settings"
+          onClick={onSettingsClick}
         >
           <Settings className="h-4 w-4" />
         </Button>
