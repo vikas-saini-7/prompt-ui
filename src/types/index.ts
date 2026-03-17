@@ -33,5 +33,5 @@ export interface Model {
 export interface InputOption {
   id: string;
   label: string;
-  icon: any;
+  icon: unknown;
 }
