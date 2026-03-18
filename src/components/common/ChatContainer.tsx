@@ -12,12 +12,19 @@ interface Props {
 
 export default function ChatContainer({ messages, isLoading = false }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const hasScrolled = useRef(false);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, isLoading]);
+    // Scroll to bottom only when messages change, not when loading state changes
+    const scrollAndReset = () => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    };
+
+    // Use requestAnimationFrame to batch scroll at optimal time
+    requestAnimationFrame(scrollAndReset);
+  }, [messages.length]);
 
   return (
     <div className="flex flex-col gap-4">
