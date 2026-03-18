@@ -129,7 +129,11 @@ export default function Page({ params }: Props) {
                 />
               ) : (
                 <div className="px-3 sm:px-4 pt-4 pb-2">
-                  <ChatContainer messages={messages} isLoading={isLoading} />
+                  <ChatContainer
+                    messages={messages}
+                    isLoading={isLoading}
+                    onPreview={setSelectedCode}
+                  />
                 </div>
               )}
 

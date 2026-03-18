@@ -7,6 +7,7 @@
 import { BaseLLMProvider } from "./base-provider";
 import { OpenAIProvider } from "./providers/openai";
 import { ClaudeProvider } from "./providers/claude";
+import { GroqProvider } from "./providers/groq";
 import { MODELS_CONFIG, type ModelMetadata } from "@/config/models.config";
 
 // Type for provider class constructor
@@ -17,6 +18,7 @@ type ProviderConstructor = new (
 
 // Provider registry - maps provider names to their classes
 const PROVIDER_REGISTRY: Record<string, ProviderConstructor> = {
+  groq: GroqProvider,
   openai: OpenAIProvider,
   anthropic: ClaudeProvider,
 };

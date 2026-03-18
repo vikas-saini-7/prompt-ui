@@ -118,9 +118,37 @@ export default function PromptInput({
               const anthropic = models.filter(
                 (m) => m.provider === "anthropic",
               );
+              const groq = models.filter((m) => m.provider === "groq");
 
               return (
                 <>
+                  {groq.map((model) => (
+                    <button
+                      key={model.id}
+                      type="button"
+                      onClick={() => {
+                        if (model.isAvailable) {
+                          handleModelChange(model.id);
+                        }
+                      }}
+                      disabled={!model.isAvailable}
+                      className={`w-full text-left px-3 py-2 text-xs transition-colors whitespace-nowrap disabled:cursor-not-allowed ${
+                        selectedModel === model.id
+                          ? "bg-[#00E87B] text-black"
+                          : model.isAvailable
+                            ? "text-zinc-400 hover:bg-zinc-800 hover:text-[#00E87B]"
+                            : "text-zinc-500 opacity-40"
+                      }`}
+                      title={
+                        !model.isAvailable ? "Model not available" : undefined
+                      }
+                    >
+                      {model.name}
+                    </button>
+                  ))}
+                  {groq.length > 0 && openai.length > 0 && (
+                    <div className="border-t border-zinc-800" />
+                  )}
                   {openai.map((model) => (
                     <button
                       key={model.id}

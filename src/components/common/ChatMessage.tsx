@@ -6,9 +6,10 @@ import CodeBlock from "./CodeBlock";
 
 interface Props {
   message: ChatMessageType;
+  onPreview?: (code: string) => void;
 }
 
-export default function ChatMessage({ message }: Props) {
+export default function ChatMessage({ message, onPreview }: Props) {
   const isUser = message.type === "user";
 
   return (
@@ -30,7 +31,13 @@ export default function ChatMessage({ message }: Props) {
           ) : (
             <>
               <p className="text-sm text-zinc-300">{message.content}</p>
-              {message.code && <CodeBlock code={message.code} />}
+              {message.code && (
+                <CodeBlock
+                  code={message.code}
+                  language="typescript"
+                  onPreview={onPreview}
+                />
+              )}
             </>
           )}
         </div>

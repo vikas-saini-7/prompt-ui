@@ -8,9 +8,14 @@ import Loader from "./Loader";
 interface Props {
   messages: ChatMessageType[];
   isLoading?: boolean;
+  onPreview?: (code: string) => void;
 }
 
-export default function ChatContainer({ messages, isLoading = false }: Props) {
+export default function ChatContainer({
+  messages,
+  isLoading = false,
+  onPreview,
+}: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const hasScrolled = useRef(false);
 
@@ -29,7 +34,7 @@ export default function ChatContainer({ messages, isLoading = false }: Props) {
   return (
     <div className="flex flex-col gap-4">
       {messages.map((message) => (
-        <ChatMessage key={message.id} message={message} />
+        <ChatMessage key={message.id} message={message} onPreview={onPreview} />
       ))}
       {isLoading && <Loader />}
       <div ref={scrollRef} />
