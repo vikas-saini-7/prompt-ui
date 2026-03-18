@@ -37,13 +37,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers>
-          <ToastProvider>
-            <ChatProvider>
-              <UIProvider>{children}</UIProvider>
-            </ChatProvider>
-          </ToastProvider>
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

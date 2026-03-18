@@ -169,3 +169,23 @@ html ::-webkit-scrollbar-thumb:hover {
   animation: dot-bounce 1.4s ease-in-out infinite;
   will-change: transform, opacity;
 }
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(113, 113, 122, 0.3) 0%,
+    rgba(113, 113, 122, 0.5) 50%,
+    rgba(113, 113, 122, 0.3) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}

@@ -8,7 +8,6 @@ import React, {
   useEffect,
 } from "react";
 import { ChatMessage, Conversation } from "@/types";
-import { apiService } from "@/lib/api/api-service";
 import {
   createConversation as createConversationAction,
   deleteConversation as deleteConversationAction,
@@ -19,6 +18,11 @@ import {
   getMessages,
   saveGeneratedComponent,
 } from "@/actions/message.actions";
+import {
+  streamCodeGeneration,
+  formatStreamedCode,
+} from "@/lib/streaming-utils";
+import { useProfile } from "@/hooks/useProfile";
 
 interface ChatContextType {
   // State
@@ -63,15 +67,27 @@ export function ChatProvider({
   children,
   initialConversationId,
 }: ChatProviderProps) {
+  const { profile, setDefaultModel } = useProfile();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCode, setSelectedCode] = useState<string | undefined>();
   const [error, setError] = useState<string | undefined>();
-  const [selectedModel, setSelectedModel] = useState("gpt-4");
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<
     string | undefined
   >(initialConversationId);
+
+  // Wrapper function to save model changes to database
+  const handleModelChange = useCallback(
+    async (modelId: string) => {
+      try {
+        await setDefaultModel(modelId);
+      } catch (error) {
+        console.error("Failed to save model preference:", error);
+      }
+    },
+    [setDefaultModel],
+  );
 
   // Get current conversation
   const currentConversation = conversations.find(
@@ -238,51 +254,107 @@ export function ChatProvider({
         // Add user message to UI
         addMessage(userMessage);
 
-        // Call API to generate component
-        const response = await apiService.generateComponent(
-          prompt,
-          selectedModel,
-        );
-
-        // Create AI message object
+        // Create AI message object that will be updated as chunks arrive
         const aiMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           type: "ai",
-          content: response.description || "Component generated successfully",
-          code: response.code,
+          content: "Generating component...",
+          code: "",
           timestamp: new Date(),
         };
 
-        // Save AI message to database
+        // Add initial AI message to UI
+        addMessage(aiMessage);
+
+        // Stream code generation
+        let generatedCode = "";
+        const generatedDescription =
+          "Component generated using AI. Copy the code and customize as needed.";
+
+        try {
+          generatedCode = await streamCodeGeneration(
+            prompt,
+            profile.defaultModel,
+            {
+              onChunk: (chunk) => {
+                // Update AI message with accumulated code
+                generatedCode += chunk;
+                const formattedCode = formatStreamedCode(generatedCode);
+
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === aiMessage.id
+                      ? {
+                          ...msg,
+                          code: formattedCode,
+                          content: `Generating component... (${formattedCode.length} characters)`,
+                        }
+                      : msg,
+                  ),
+                );
+
+                setSelectedCode(formattedCode);
+              },
+              onStart: () => {
+                // Already added initial message
+              },
+              onComplete: () => {
+                // Will save after this callback
+              },
+              onError: (errorMsg) => {
+                throw new Error(errorMsg);
+              },
+            },
+          );
+        } catch (streamError) {
+          const errorMsg =
+            streamError instanceof Error
+              ? streamError.message
+              : "Failed to generate code";
+          throw new Error(errorMsg);
+        }
+
+        // Format final code
+        const finalCode = formatStreamedCode(generatedCode);
+
+        // Update AI message with final state
         const aiMessageId = await saveMessage(
           targetConvId,
           "ai",
-          response.description || "Component generated successfully",
+          generatedDescription,
           {
-            code: response.code,
-            codeLanguage: response.language || "jsx",
+            code: finalCode,
+            codeLanguage: "jsx",
           },
         );
 
-        // Update message ID with DB ID
-        aiMessage.id = aiMessageId;
+        // Update message in UI with final state
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === aiMessage.id
+              ? {
+                  ...msg,
+                  id: aiMessageId,
+                  content: generatedDescription,
+                  code: finalCode,
+                }
+              : msg,
+          ),
+        );
 
         // Save generated component to database
         await saveGeneratedComponent(targetConvId, aiMessageId, {
           prompt,
-          code: response.code,
-          description: response.description,
-          aiModel: selectedModel,
-          language: response.language || "jsx",
-          framework: response.framework || "react",
-          tags: response.tags || [],
+          code: finalCode,
+          description: generatedDescription,
+          aiModel: profile.defaultModel,
+          language: "jsx",
+          framework: "react",
+          tags: ["generated"],
         });
 
-        // Add AI message to UI
-        addMessage(aiMessage);
-
-        // Set preview code
-        setSelectedCode(response.code);
+        // Set final preview code
+        setSelectedCode(finalCode);
       } catch (err) {
         const errorMsg =
           err instanceof Error ? err.message : "Failed to generate component";
@@ -292,19 +364,19 @@ export function ChatProvider({
         setIsLoading(false);
       }
     },
-    [selectedModel, currentConversationId, createConversation, addMessage],
+    [profile, currentConversationId, createConversation, addMessage],
   );
 
   const saveConversation = useCallback(async (): Promise<string | null> => {
     try {
       if (!currentConversationId) return null;
-      const id = await apiService.saveConversation(messages);
-      return id;
+      // Conversation already auto-saves when messages are added
+      return currentConversationId;
     } catch (err) {
       console.error("Failed to save conversation:", err);
       return null;
     }
-  }, [messages, currentConversationId]);
+  }, [currentConversationId]);
 
   // Load initial conversation if provided
   useEffect(() => {
@@ -341,7 +413,7 @@ export function ChatProvider({
     isLoading,
     selectedCode,
     error,
-    selectedModel,
+    selectedModel: profile.defaultModel,
     conversations,
     currentConversation,
     addMessage,
@@ -350,7 +422,7 @@ export function ChatProvider({
     setLoading: setIsLoading,
     setSelectedCode,
     setError,
-    setSelectedModel,
+    setSelectedModel: handleModelChange,
     setConversationTitle,
     createConversation,
     loadConversation,

@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { getDefaultModelId } from "@/config/models.config";
 
 export interface UserSettings extends Document {
   userId: mongoose.Types.ObjectId;
@@ -19,7 +20,7 @@ const userSettingsSchema = new Schema<UserSettings>(
     },
     defaultModel: {
       type: String,
-      default: "gpt-4",
+      default: () => getDefaultModelId(),
     },
     theme: {
       type: String,

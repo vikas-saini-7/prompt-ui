@@ -33,6 +33,8 @@ export interface Conversation {
 export interface Model {
   id: string;
   name: string;
+  provider?: "openai" | "anthropic";
+  isAvailable?: boolean;
 }
 
 export interface InputOption {

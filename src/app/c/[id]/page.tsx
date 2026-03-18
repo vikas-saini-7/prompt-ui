@@ -4,6 +4,7 @@ import { useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { useChat } from "@/hooks/useChat";
 import { useUI } from "@/hooks/useUI";
+import { useProfile } from "@/hooks/useProfile";
 import { useToast } from "@/hooks/useToast";
 import AppNavbar from "@/components/common/AppNavbar";
 import ChatContainer from "@/components/common/ChatContainer";
@@ -39,6 +40,7 @@ export default function Page({ params }: Props) {
   } = useChat();
 
   const { sidebarOpen, toggleSidebar, setSidebarOpen } = useUI();
+  const { isProfileLoading } = useProfile();
   const toast = useToast();
 
   // Load conversation when conversation ID changes
@@ -145,10 +147,10 @@ export default function Page({ params }: Props) {
             >
               <PromptInput
                 onSubmit={generateComponent}
-                onClear={() => setSelectedCode(undefined)}
                 isLoading={isLoading}
                 selectedModel={selectedModel}
                 onModelChange={setSelectedModel}
+                isProfileLoading={isProfileLoading}
               />
             </div>
           </div>

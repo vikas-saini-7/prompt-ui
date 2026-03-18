@@ -7,29 +7,27 @@ import { Model } from "@/types";
 
 interface Props {
   onSubmit: (prompt: string) => void;
-  onClear: () => void;
   isLoading?: boolean;
   disabled?: boolean;
   selectedModel?: string;
   onModelChange?: (modelId: string) => void;
   models?: Model[];
   options?: typeof INPUT_OPTIONS;
+  isProfileLoading?: boolean;
 }
 
 export default function PromptInput({
   onSubmit,
-  onClear,
   isLoading = false,
   disabled = false,
-  selectedModel: initialModel,
+  selectedModel: initialModel = "",
   onModelChange,
   models = MODELS,
   options = INPUT_OPTIONS,
+  isProfileLoading = false,
 }: Props) {
   const [prompt, setPrompt] = useState("");
-  const [selectedModel, setSelectedModel] = useState(
-    initialModel || MODELS[0]?.id || "gpt-4",
-  );
+  const [selectedModel, setSelectedModel] = useState(initialModel);
   const [showModels, setShowModels] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const modelContainerRef = useRef<HTMLDivElement>(null);
@@ -94,33 +92,89 @@ export default function PromptInput({
         <button
           type="button"
           onClick={() => setShowModels(!showModels)}
-          disabled={isLoading || disabled}
-          className="bg-[#0F0F0F] flex items-center gap-1 px-2 py-1 text-xs text-zinc-400 hover:text-[#00E87B] transition-colors disabled:opacity-50"
+          disabled={isLoading || disabled || isProfileLoading}
+          className="bg-[#0F0F0F] flex items-center gap-2 px-2 py-1 text-xs text-zinc-400 hover:text-[#00E87B] transition-colors disabled:opacity-50"
         >
-          <span>{currentModelName}</span>
-          {showModels ? (
-            <ChevronUp className="h-3 w-3" />
+          {isProfileLoading ? (
+            <div className="flex items-center gap-2">
+              <span className="h-3 mb-1 w-24 bg-zinc-700 rounded animate-pulse" />
+            </div>
           ) : (
-            <ChevronDown className="h-3 w-3" />
+            <>
+              <span>{currentModelName}</span>
+              {showModels ? (
+                <ChevronUp className="h-3 w-3" />
+              ) : (
+                <ChevronDown className="h-3 w-3" />
+              )}
+            </>
           )}
         </button>
 
         {showModels && (
           <div className="absolute left-0 bottom-full mb-2 bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden shadow-lg z-50">
-            {models.map((model) => (
-              <button
-                key={model.id}
-                type="button"
-                onClick={() => handleModelChange(model.id)}
-                className={`w-full text-left px-3 py-2 text-xs transition-colors ${
-                  selectedModel === model.id
-                    ? "bg-[#00E87B] text-black"
-                    : "text-zinc-400 hover:bg-zinc-800 hover:text-[#00E87B] whitespace-nowrap"
-                }`}
-              >
-                {model.name}
-              </button>
-            ))}
+            {(() => {
+              const openai = models.filter((m) => m.provider === "openai");
+              const anthropic = models.filter(
+                (m) => m.provider === "anthropic",
+              );
+
+              return (
+                <>
+                  {openai.map((model) => (
+                    <button
+                      key={model.id}
+                      type="button"
+                      onClick={() => {
+                        if (model.isAvailable) {
+                          handleModelChange(model.id);
+                        }
+                      }}
+                      disabled={!model.isAvailable}
+                      className={`w-full text-left px-3 py-2 text-xs transition-colors whitespace-nowrap disabled:cursor-not-allowed ${
+                        selectedModel === model.id
+                          ? "bg-[#00E87B] text-black"
+                          : model.isAvailable
+                            ? "text-zinc-400 hover:bg-zinc-800 hover:text-[#00E87B]"
+                            : "text-zinc-500 opacity-40"
+                      }`}
+                      title={
+                        !model.isAvailable ? "Model not available" : undefined
+                      }
+                    >
+                      {model.name}
+                    </button>
+                  ))}
+                  {openai.length > 0 && anthropic.length > 0 && (
+                    <div className="border-t border-zinc-800" />
+                  )}
+                  {anthropic.map((model) => (
+                    <button
+                      key={model.id}
+                      type="button"
+                      onClick={() => {
+                        if (model.isAvailable) {
+                          handleModelChange(model.id);
+                        }
+                      }}
+                      disabled={!model.isAvailable}
+                      className={`w-full text-left px-3 py-2 text-xs transition-colors whitespace-nowrap disabled:cursor-not-allowed ${
+                        selectedModel === model.id
+                          ? "bg-[#00E87B] text-black"
+                          : model.isAvailable
+                            ? "text-zinc-400 hover:bg-zinc-800 hover:text-[#00E87B]"
+                            : "text-zinc-500 opacity-40"
+                      }`}
+                      title={
+                        !model.isAvailable ? "Model not available" : undefined
+                      }
+                    >
+                      {model.name}
+                    </button>
+                  ))}
+                </>
+              );
+            })()}
           </div>
         )}
       </div>

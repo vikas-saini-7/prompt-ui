@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useChat } from "@/hooks/useChat";
 import { useUI } from "@/hooks/useUI";
+import { useProfile } from "@/hooks/useProfile";
 import { useToast } from "@/hooks/useToast";
 import AppNavbar from "@/components/common/AppNavbar";
 import ChatContainer from "@/components/common/ChatContainer";
@@ -29,6 +30,7 @@ export default function Home() {
   } = useChat();
 
   const { sidebarOpen, toggleSidebar, setSidebarOpen } = useUI();
+  const { isProfileLoading } = useProfile();
   const toast = useToast();
 
   // Clear messages when navigating to home
@@ -138,10 +140,10 @@ export default function Home() {
             >
               <PromptInput
                 onSubmit={handleStartChat}
-                onClear={clearMessages}
                 isLoading={isLoading}
                 selectedModel={selectedModel}
                 onModelChange={setSelectedModel}
+                isProfileLoading={isProfileLoading}
               />
             </div>
           </div>

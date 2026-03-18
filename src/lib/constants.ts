@@ -1,13 +1,14 @@
 import { Model, InputOption } from "@/types";
 import { Upload, Camera } from "lucide-react";
+import { MODELS_CONFIG } from "@/config/models.config";
 
-export const MODELS: Model[] = [
-  { id: "gpt-4", name: "GPT-4" },
-  { id: "gpt-3.5", name: "GPT-3.5" },
-  { id: "claude-3", name: "Claude 3" },
-  { id: "claude-2", name: "Claude 2" },
-  { id: "gemini", name: "Gemini Pro" },
-];
+// Convert model config to Model type for UI
+export const MODELS: Model[] = Object.values(MODELS_CONFIG).map((model) => ({
+  id: model.id,
+  name: model.name,
+  provider: model.provider,
+  isAvailable: model.isAvailable,
+}));
 
 export const INPUT_OPTIONS: InputOption[] = [
   { id: "upload", label: "Upload File", icon: Upload },
