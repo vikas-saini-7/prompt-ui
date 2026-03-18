@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useChat } from "@/hooks/useChat";
 import { useUI } from "@/hooks/useUI";
+import { useToast } from "@/hooks/useToast";
 import AppNavbar from "@/components/common/AppNavbar";
 import ChatContainer from "@/components/common/ChatContainer";
 import PromptInput from "@/components/common/PromptInput";
@@ -20,7 +21,6 @@ export default function Home() {
     selectedModel,
     generateComponent,
     clearMessages,
-    setSelectedCode,
     setSelectedModel,
     createConversation,
     conversations,
@@ -28,16 +28,25 @@ export default function Home() {
   } = useChat();
 
   const { sidebarOpen, toggleSidebar, setSidebarOpen } = useUI();
+  const toast = useToast();
 
   const isEmpty = messages.length === 0;
 
   const handleNewChat = async () => {
+    setSidebarOpen(false);
     router.push("/");
   };
 
   const handleStartChat = async (prompt: string) => {
-    // Create conversation first (adds to state immediately)
-    const conversationId = await createConversation();
+    // Extract title from prompt: first sentence or first 50 chars, whichever comes first
+    const titleEndIndex = Math.min(
+      prompt.search(/[.!?\n]/) > 0 ? prompt.search(/[.!?\n]/) : prompt.length,
+      50,
+    );
+    const conversationTitle = prompt.substring(0, titleEndIndex).trim();
+
+    // Create conversation with title from prompt
+    const conversationId = await createConversation(conversationTitle);
     // Redirect immediately (before API call) - this makes navigation instant
     router.push(`/c/${conversationId}`);
     // Generate component in background (will add messages to existing conversation)
@@ -49,8 +58,20 @@ export default function Home() {
     router.push(`/c/${id}`);
   };
 
-  const handleDeleteConversation = (id: string) => {
-    deleteConversation(id);
+  const handleDeleteConversation = async (id: string) => {
+    try {
+      await deleteConversation(id);
+      toast.success(
+        "Conversation deleted",
+        "The conversation has been permanently removed.",
+      );
+    } catch (err) {
+      toast.error(
+        "Failed to delete",
+        "Could not delete the conversation. Please try again.",
+      );
+      console.error("Error deleting conversation:", err);
+    }
   };
   return (
     <div className="flex flex-col h-screen bg-[#0F0F0F] overflow-hidden">

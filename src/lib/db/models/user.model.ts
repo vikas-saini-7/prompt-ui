@@ -1,7 +1,6 @@
-import { ObjectId } from "mongodb";
+import mongoose, { Schema, Document } from "mongoose";
 
-export interface User {
-  _id?: ObjectId;
+export interface User extends Document {
   name: string;
   email: string;
   password?: string;
@@ -11,4 +10,24 @@ export interface User {
   updatedAt: Date;
 }
 
-export const userCollectionName = "users";
+const userSchema = new Schema<User>(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+    },
+    password: String,
+    image: String,
+    provider: String,
+  },
+  { timestamps: true },
+);
+
+export const UserModel =
+  mongoose.models.User || mongoose.model<User>("User", userSchema);

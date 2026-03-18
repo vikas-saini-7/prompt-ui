@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { useChat } from "@/hooks/useChat";
 import { useUI } from "@/hooks/useUI";
+import { useToast } from "@/hooks/useToast";
 import AppNavbar from "@/components/common/AppNavbar";
 import ChatContainer from "@/components/common/ChatContainer";
 import PromptInput from "@/components/common/PromptInput";
@@ -12,11 +13,15 @@ import Sidebar from "@/components/common/Sidebar";
 import PreviewPanel from "@/components/common/PreviewPanel";
 
 interface Props {
-  conversationId: string;
+  params: Promise<{
+    id: string;
+  }>;
 }
 
-export default function Page({ conversationId }: Props) {
+export default function Page({ params }: Props) {
   const router = useRouter();
+  const resolvedParams = use(params);
+  const conversationId = resolvedParams.id;
   const {
     messages,
     isLoading,
@@ -34,6 +39,7 @@ export default function Page({ conversationId }: Props) {
   } = useChat();
 
   const { sidebarOpen, toggleSidebar, setSidebarOpen } = useUI();
+  const toast = useToast();
 
   // Load conversation when conversation ID changes
   useEffect(() => {
@@ -56,11 +62,23 @@ export default function Page({ conversationId }: Props) {
     router.push(`/c/${id}`);
   };
 
-  const handleDeleteConversation = (id: string) => {
-    deleteConversation(id);
-    // If deleted conversation is current, redirect to home
-    if (id === conversationId) {
-      router.push("/");
+  const handleDeleteConversation = async (id: string) => {
+    try {
+      const wasCurrentConversation = await deleteConversation(id);
+      toast.success(
+        "Conversation deleted",
+        "The conversation has been permanently removed.",
+      );
+      // If deleted conversation is current, redirect to home
+      if (wasCurrentConversation) {
+        router.push("/");
+      }
+    } catch (err) {
+      toast.error(
+        "Failed to delete",
+        "Could not delete the conversation. Please try again.",
+      );
+      console.error("Error deleting conversation:", err);
     }
   };
 

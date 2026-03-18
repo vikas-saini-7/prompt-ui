@@ -11,6 +11,7 @@ import {
   Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ConfirmationModal from "@/components/common/ConfirmationModal";
 import { ChatMessage, Conversation } from "@/types";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
@@ -44,6 +45,7 @@ export default function Sidebar({
   const { data: session, status } = useSession();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -137,36 +139,32 @@ export default function Sidebar({
               items.map((item) => (
                 <div
                   key={item.id}
-                  className={`group relative p-3 rounded-lg transition-colors text-left ${
+                  onClick={() => onSelectConversation?.(item.id)}
+                  className={`group relative p-3 rounded-lg transition-colors text-left cursor-pointer ${
                     currentConversationId === item.id
-                      ? "bg-[#00E87B]/10 border border-[#00E87B]"
+                      ? "bg-zinc-900 border border-[#00E87B]"
                       : "bg-zinc-900 hover:bg-zinc-800 border border-transparent"
                   }`}
                 >
-                  <button
-                    onClick={() => onSelectConversation?.(item.id)}
-                    className="w-full text-left"
-                  >
-                    <p className="text-xs text-zinc-400 truncate">
-                      {"createdAt" in item && item.createdAt
-                        ? new Date(item.createdAt as Date).toLocaleDateString()
-                        : "Today"}
+                  <p className="text-xs text-zinc-400 truncate">
+                    {"createdAt" in item && item.createdAt
+                      ? new Date(item.createdAt as Date).toLocaleDateString()
+                      : "Today"}
+                  </p>
+                  <p className="text-sm text-white truncate mt-1">
+                    {item.title || "Untitled Conversation"}
+                  </p>
+                  {"preview" in item && item.preview && (
+                    <p className="text-xs text-zinc-500 truncate mt-1">
+                      {item.preview as string}
                     </p>
-                    <p className="text-sm text-white truncate mt-1">
-                      {item.title || "Untitled Conversation"}
-                    </p>
-                    {"preview" in item && item.preview && (
-                      <p className="text-xs text-zinc-500 truncate mt-1">
-                        {item.preview as string}
-                      </p>
-                    )}
-                  </button>
+                  )}
 
                   {/* Delete Button */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      onDeleteConversation?.(item.id);
+                      setDeleteConfirmId(item.id);
                     }}
                     className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-900/30 rounded"
                     title="Delete conversation"
@@ -285,6 +283,23 @@ export default function Sidebar({
           )}
         </div>
       </aside>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={!!deleteConfirmId}
+        title="Delete Conversation"
+        message="Are you sure you want to delete this conversation? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDangerous={true}
+        onConfirm={() => {
+          if (deleteConfirmId) {
+            onDeleteConversation?.(deleteConfirmId);
+            setDeleteConfirmId(null);
+          }
+        }}
+        onCancel={() => setDeleteConfirmId(null)}
+      />
     </>
   );
 }

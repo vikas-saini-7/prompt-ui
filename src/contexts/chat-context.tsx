@@ -9,6 +9,11 @@ import React, {
 } from "react";
 import { ChatMessage, Conversation } from "@/types";
 import { apiService } from "@/lib/api/api-service";
+import {
+  createConversation as createConversationAction,
+  deleteConversation as deleteConversationAction,
+  getConversations,
+} from "@/actions/conversation.actions";
 
 interface ChatContextType {
   // State
@@ -31,9 +36,9 @@ interface ChatContextType {
   setConversationTitle: (title: string) => void;
 
   // Conversation Management
-  createConversation: () => Promise<string>;
+  createConversation: (title?: string) => Promise<string>;
   loadConversation: (id: string) => void;
-  deleteConversation: (id: string) => void;
+  deleteConversation: (id: string) => Promise<boolean>;
 
   // Advanced
   generateComponent: (prompt: string, conversationId?: string) => Promise<void>;
@@ -47,10 +52,6 @@ export const ChatContext = createContext<ChatContextType | undefined>(
 interface ChatProviderProps {
   children: ReactNode;
   initialConversationId?: string;
-}
-
-function generateId(): string {
-  return Math.random().toString(36).substr(2, 9);
 }
 
 export function ChatProvider({
@@ -72,45 +73,13 @@ export function ChatProvider({
     (c) => c.id === currentConversationId,
   );
 
-  const addMessage = useCallback(
-    (message: ChatMessage) => {
-      setMessages((prev) => [...prev, message]);
+  const addMessage = useCallback((message: ChatMessage) => {
+    setMessages((prev) => [...prev, message]);
+  }, []);
 
-      // Update current conversation messages
-      setConversations((prev) =>
-        prev.map((conv) =>
-          conv.id === currentConversationId
-            ? {
-                ...conv,
-                messages: [...(conv.messages || []), message],
-                updatedAt: new Date(),
-              }
-            : conv,
-        ),
-      );
-    },
-    [currentConversationId],
-  );
-
-  const addMessages = useCallback(
-    (newMessages: ChatMessage[]) => {
-      setMessages((prev) => [...prev, ...newMessages]);
-
-      // Update current conversation messages
-      setConversations((prev) =>
-        prev.map((conv) =>
-          conv.id === currentConversationId
-            ? {
-                ...conv,
-                messages: [...(conv.messages || []), ...newMessages],
-                updatedAt: new Date(),
-              }
-            : conv,
-        ),
-      );
-    },
-    [currentConversationId],
-  );
+  const addMessages = useCallback((newMessages: ChatMessage[]) => {
+    setMessages((prev) => [...prev, ...newMessages]);
+  }, []);
 
   const clearMessages = useCallback(() => {
     setMessages([]);
@@ -129,21 +98,34 @@ export function ChatProvider({
     [currentConversationId],
   );
 
-  const createConversation = useCallback(async (): Promise<string> => {
-    const newId = generateId();
-    const newConversation: Conversation = {
-      id: newId,
-      title: "New Conversation",
-      messages: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+  const createConversation = useCallback(
+    async (title?: string): Promise<string> => {
+      try {
+        // Create conversation in database via server action
+        const conversationId = await createConversationAction(
+          title || "New Conversation",
+        );
 
-    setConversations((prev) => [newConversation, ...prev]);
-    setCurrentConversationId(newId);
+        // Add to local state
+        const newConversation: Conversation = {
+          id: conversationId,
+          title: title || "New Conversation",
+          messages: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
 
-    return newId;
-  }, []);
+        setConversations((prev) => [newConversation, ...prev]);
+        setCurrentConversationId(conversationId);
+
+        return conversationId;
+      } catch (err) {
+        console.error("Error creating conversation:", err);
+        throw err;
+      }
+    },
+    [],
+  );
 
   const loadConversation = useCallback(
     (id: string) => {
@@ -166,12 +148,26 @@ export function ChatProvider({
   );
 
   const deleteConversation = useCallback(
-    (id: string) => {
-      setConversations((prev) => prev.filter((c) => c.id !== id));
-      if (currentConversationId === id) {
-        setCurrentConversationId(undefined);
-        setMessages([]);
-        setSelectedCode(undefined);
+    async (id: string): Promise<boolean> => {
+      try {
+        // Delete from database via server action
+        await deleteConversationAction(id);
+
+        // Check if this is the current conversation
+        const isCurrentConversation = currentConversationId === id;
+
+        // Delete from local state
+        setConversations((prev) => prev.filter((c) => c.id !== id));
+        if (isCurrentConversation) {
+          setCurrentConversationId(undefined);
+          setMessages([]);
+          setSelectedCode(undefined);
+        }
+
+        return isCurrentConversation;
+      } catch (err) {
+        console.error("Error deleting conversation:", err);
+        throw err;
       }
     },
     [currentConversationId],
@@ -188,8 +184,7 @@ export function ChatProvider({
 
         // Create conversation if none exists
         if (!targetConvId) {
-          const newId = await createConversation();
-          targetConvId = newId;
+          targetConvId = await createConversation();
         }
 
         // Ensure current conversation is set to target
@@ -205,19 +200,8 @@ export function ChatProvider({
           timestamp: new Date(),
         };
 
-        // Add messages directly to state with the correct conversation ID
-        setMessages((prev) => [...prev, userMessage]);
-        setConversations((prev) =>
-          prev.map((conv) =>
-            conv.id === targetConvId
-              ? {
-                  ...conv,
-                  messages: [...(conv.messages || []), userMessage],
-                  updatedAt: new Date(),
-                }
-              : conv,
-          ),
-        );
+        // Add user message
+        addMessage(userMessage);
 
         // Call API
         const response = await apiService.generateComponent(
@@ -235,33 +219,9 @@ export function ChatProvider({
         };
 
         // Add AI message
-        setMessages((prev) => [...prev, aiMessage]);
-        setConversations((prev) =>
-          prev.map((conv) =>
-            conv.id === targetConvId
-              ? {
-                  ...conv,
-                  messages: [...(conv.messages || []), aiMessage],
-                  updatedAt: new Date(),
-                }
-              : conv,
-          ),
-        );
+        addMessage(aiMessage);
 
         setSelectedCode(response.code);
-
-        // Update title if this is the first message
-        setConversations((prev) =>
-          prev.map((conv) =>
-            conv.id === targetConvId && (conv.messages?.length || 0) <= 2
-              ? {
-                  ...conv,
-                  title:
-                    prompt.substring(0, 50) + (prompt.length > 50 ? "..." : ""),
-                }
-              : conv,
-          ),
-        );
       } catch (err) {
         const errorMsg =
           err instanceof Error ? err.message : "Failed to generate component";
@@ -271,7 +231,7 @@ export function ChatProvider({
         setIsLoading(false);
       }
     },
-    [selectedModel, currentConversationId, createConversation],
+    [selectedModel, currentConversationId, createConversation, addMessage],
   );
 
   const saveConversation = useCallback(async (): Promise<string | null> => {
@@ -291,6 +251,29 @@ export function ChatProvider({
       loadConversation(initialConversationId);
     }
   }, [initialConversationId, loadConversation]);
+
+  // Load user conversations on mount
+  useEffect(() => {
+    const loadUserConversations = async () => {
+      try {
+        const userConversations = await getConversations();
+        const mappedConversations: Conversation[] = userConversations.map(
+          (conv) => ({
+            id: conv.id,
+            title: conv.title,
+            messages: [],
+            createdAt: conv.createdAt,
+            updatedAt: conv.updatedAt,
+          }),
+        );
+        setConversations(mappedConversations);
+      } catch (err) {
+        console.error("Failed to load conversations:", err);
+      }
+    };
+
+    loadUserConversations();
+  }, []);
 
   const value: ChatContextType = {
     messages,

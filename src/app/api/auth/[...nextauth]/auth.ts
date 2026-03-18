@@ -4,8 +4,8 @@ import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import bcrypt from "bcrypt";
-import { User, userCollectionName } from "@/lib/db/models/user.model";
-import clientPromise from "@/lib/db/mongodb";
+import { UserModel } from "@/lib/db/models";
+import connectDB, { clientPromise } from "@/lib/db/mongodb";
 
 if (!process.env.NEXTAUTH_SECRET) {
   throw new Error("NEXTAUTH_SECRET is not defined");
@@ -44,13 +44,11 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
-        const client = await clientPromise;
-        const db = client.db();
-        const usersCollection = db.collection(userCollectionName);
+        await connectDB();
 
-        const user = (await usersCollection.findOne({
+        const user = await UserModel.findOne({
           email: credentials.email,
-        })) as User | null;
+        });
 
         if (!user || !user.password) {
           throw new Error("No user found with this email");

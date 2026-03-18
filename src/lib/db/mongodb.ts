@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { MongoClient } from "mongodb";
 
 if (!process.env.MONGODB_URI) {
@@ -5,27 +6,56 @@ if (!process.env.MONGODB_URI) {
 }
 
 const uri = process.env.MONGODB_URI;
-let client: MongoClient;
+let cachedConnection: typeof mongoose | null = null;
 let clientPromise: Promise<MongoClient>;
 
+// Mongoose connection
 if (process.env.NODE_ENV === "development") {
   // In development, use a global variable so that the value
   // is preserved across module reloads caused by HMR (Hot Module Replacement).
   let globalWithMongo = global as typeof globalThis & {
-    _mongoClientPromise?: Promise<MongoClient>;
+    _mongooseConnection?: typeof mongoose;
   };
 
-  if (!globalWithMongo._mongoClientPromise) {
-    client = new MongoClient(uri);
-    globalWithMongo._mongoClientPromise = client.connect();
+  if (!globalWithMongo._mongooseConnection) {
+    globalWithMongo._mongooseConnection = mongoose;
   }
-  clientPromise = globalWithMongo._mongoClientPromise;
+  cachedConnection = globalWithMongo._mongooseConnection;
 } else {
-  // In production, it's best to not use a global variable.
-  client = new MongoClient(uri);
+  // In production, cache the connection.
+  if (!cachedConnection) {
+    cachedConnection = mongoose;
+  }
+}
+
+// MongoClient connection for NextAuth adapter
+if (process.env.NODE_ENV === "development") {
+  let globalWithMongoClient = global as typeof globalThis & {
+    _mongoClientPromise?: Promise<MongoClient>;
+  };
+  if (!globalWithMongoClient._mongoClientPromise) {
+    const client = new MongoClient(uri);
+    globalWithMongoClient._mongoClientPromise = client.connect();
+  }
+  clientPromise = globalWithMongoClient._mongoClientPromise;
+} else {
+  const client = new MongoClient(uri);
   clientPromise = client.connect();
 }
 
-// Export a module-scoped MongoClient promise. By doing this in a
-// separate module, the client can be shared across functions.
-export default clientPromise;
+const connectDB = async () => {
+  if (mongoose.connection.readyState >= 1) {
+    return mongoose;
+  }
+
+  try {
+    await mongoose.connect(uri);
+    return mongoose;
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    throw error;
+  }
+};
+
+export default connectDB;
+export { clientPromise };

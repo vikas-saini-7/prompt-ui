@@ -1,8 +1,8 @@
 "use server";
 
 import bcrypt from "bcrypt";
-import clientPromise from "@/lib/db/mongodb";
-import { User, userCollectionName } from "@/lib/db/models/user.model";
+import connectDB from "@/lib/db/mongodb";
+import { UserModel } from "@/lib/db/models";
 
 export async function signupWithEmail(
   name: string,
@@ -19,12 +19,11 @@ export async function signupWithEmail(
   }
 
   try {
-    // Check if user already exists
-    const client = await clientPromise;
-    const db = client.db();
-    const usersCollection = db.collection(userCollectionName);
+    // Connect to database
+    await connectDB();
 
-    const existingUser = await usersCollection.findOne({ email });
+    // Check if user already exists
+    const existingUser = await UserModel.findOne({ email });
     if (existingUser) {
       return { error: "User with this email already exists" };
     }
@@ -35,20 +34,17 @@ export async function signupWithEmail(
     const hashedPassword = await bcrypt.hash(password, 10);
     console.log("Password hashed successfully");
 
-    // Create user
-    const newUser: User = {
+    // Create user - timestamps are auto-managed by Mongoose
+    const newUser = await UserModel.create({
       name,
       email,
       password: hashedPassword,
       provider: "credentials",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    });
 
-    const result = await usersCollection.insertOne(newUser);
-    console.log("User inserted with ID:", result.insertedId);
+    console.log("User inserted with ID:", newUser._id);
 
-    if (!result.insertedId) {
+    if (!newUser._id) {
       return { error: "Failed to create user" };
     }
 

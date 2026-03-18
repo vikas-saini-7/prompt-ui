@@ -1,8 +1,7 @@
-import { ObjectId } from "mongodb";
+import mongoose, { Schema, Document } from "mongoose";
 
-export interface UserSettings {
-  _id?: ObjectId;
-  userId: ObjectId;
+export interface UserSettings extends Document {
+  userId: mongoose.Types.ObjectId;
   defaultModel: string;
   theme: "dark" | "light";
   autoSaveConversations: boolean;
@@ -10,4 +9,31 @@ export interface UserSettings {
   updatedAt: Date;
 }
 
-export const userSettingsCollectionName = "userSettings";
+const userSettingsSchema = new Schema<UserSettings>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
+    },
+    defaultModel: {
+      type: String,
+      default: "gpt-4",
+    },
+    theme: {
+      type: String,
+      enum: ["dark", "light"],
+      default: "dark",
+    },
+    autoSaveConversations: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  { timestamps: true },
+);
+
+export const UserSettingsModel =
+  mongoose.models.UserSettings ||
+  mongoose.model<UserSettings>("UserSettings", userSettingsSchema);

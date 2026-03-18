@@ -1,20 +1,8 @@
-import { type User, userCollectionName } from "./user.model";
-import {
-  type UserSettings,
-  userSettingsCollectionName,
-} from "./user-settings.model";
-import {
-  type Conversation,
-  conversationCollectionName,
-} from "./conversation.model";
-import { type Message, messageCollectionName } from "./message.model";
-import {
+export { type User, UserModel } from "./user.model";
+export { type UserSettings, UserSettingsModel } from "./user-settings.model";
+export { type Conversation, ConversationModel } from "./conversation.model";
+export { type Message, MessageModel } from "./message.model";
+export {
   type GeneratedComponent,
-  generatedComponentCollectionName,
+  GeneratedComponentModel,
 } from "./generated-component.model";
-
-export { type User, userCollectionName };
-export { type UserSettings, userSettingsCollectionName };
-export { type Conversation, conversationCollectionName };
-export { type Message, messageCollectionName };
-export { type GeneratedComponent, generatedComponentCollectionName };

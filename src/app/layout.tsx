@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
 import { ChatProvider } from "@/contexts/chat-context";
 import { UIProvider } from "@/contexts/ui-context";
+import { ToastProvider } from "@/lib/contexts/toast-context";
 import { Providers } from "./providers";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -37,9 +38,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          <ChatProvider>
-            <UIProvider>{children}</UIProvider>
-          </ChatProvider>
+          <ToastProvider>
+            <ChatProvider>
+              <UIProvider>{children}</UIProvider>
+            </ChatProvider>
+          </ToastProvider>
         </Providers>
       </body>
     </html>
