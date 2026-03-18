@@ -49,17 +49,24 @@ export abstract class BaseLLMProvider {
    * Format prompt for code generation
    */
   protected formatPrompt(prompt: string): string {
-    return `You are a React component code generator. Generate a complete, production-ready React component (TSX) based on this description. Include Tailwind CSS styling. The component should be self-contained, ready to use, and follow React best practices.
+    return `You are a React component code generator. Your task is to generate a complete, production-ready React component.
 
-Description: ${prompt}
+USER REQUEST: ${prompt}
 
-Requirements:
-- Write only React/TypeScript code
-- Use Tailwind CSS for styling
-- Include proper imports
-- Make it visually appealing and functional
-- Return only the code, no explanations
+CRITICAL REQUIREMENTS:
+1. Generate ONLY valid JSX/JavaScript code - no markdown, no explanations, no comments
+2. Use React hooks (useState, useEffect) for interactivity
+3. Style with inline styles or standard CSS classes
+4. Create a self-contained component that's ready to use immediately
+5. If you create a named component function, end with the component name on its own line
+6. Alternative: Return a direct JSX expression wrapped in parentheses like: (<div>test</div>)
+7. Ensure all braces, parentheses, and tags are properly closed
+8. No TypeScript types needed - use plain JavaScript
+9. Import statements should be omitted
 
-Component code:`;
+RESPONSE FORMAT:
+Return ONLY the component code. Nothing else.
+
+Component Code:`;
   }
 }

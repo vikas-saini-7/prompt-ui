@@ -109,7 +109,7 @@ export class GroqProvider extends BaseLLMProvider {
                     content,
                   };
                 }
-              } catch (parseError) {
+              } catch {
                 // Ignore parse errors for keep-alive messages
               }
             }

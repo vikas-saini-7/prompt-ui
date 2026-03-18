@@ -1,17 +1,102 @@
 "use client";
 
-import { useState } from "react";
-import { Code, Eye, Copy, Check } from "lucide-react";
+import { useState, Suspense, useEffect } from "react";
+import { Code, Eye, Copy, Check, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LiveProvider, LivePreview, LiveError } from "react-live";
+import * as React from "react";
+import { Fragment } from "react";
+import { transformCodeForPreview } from "@/lib/preview-utils";
 
 interface Props {
   code?: string;
   isLoading?: boolean;
 }
 
+// Fallback components for preview
+const PreviewFallback = () => (
+  <div className="flex items-center justify-center p-4 text-zinc-400 text-sm">
+    <div className="animate-spin">⏳</div>
+  </div>
+);
+
+const ErrorMessage = ({ message }: { message: string }) => (
+  <div className="flex items-start gap-3 p-4 bg-amber-950 border border-amber-900 rounded text-amber-200 text-xs">
+    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+    <div className="flex-1">
+      <p className="font-semibold mb-1">Preview Error</p>
+      <p className="text-amber-100/80 font-mono text-xs overflow-wrap">
+        {message}
+      </p>
+    </div>
+  </div>
+);
+
+// Placeholder code for initial preview
+const PLACEHOLDER_CODE = `<h1>Hello World</h1>`;
+
+// Scope for react-live - includes common utilities
+const getPreviewScope = () => ({
+  React,
+  Fragment,
+  // React hooks
+  useState: React.useState,
+  useEffect: React.useEffect,
+  useCallback: React.useCallback,
+  useMemo: React.useMemo,
+  useRef: React.useRef,
+  useReducer: React.useReducer,
+  // Common utilities
+  Object,
+  Array,
+  String,
+  Number,
+  Boolean,
+  Math,
+  Date,
+  JSON,
+  console,
+});
+
 export default function PreviewPanel({ code }: Props) {
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<"preview" | "code">("code");
+  const [activeTab, setActiveTab] = useState<"preview" | "code">("preview");
+  const [transformedCode, setTransformedCode] = useState(PLACEHOLDER_CODE);
+  const [codeError, setCodeError] = useState<string | null>(null);
+
+  // Memoize transformation to avoid unnecessary recalculations
+  const transformedCodeMemo = React.useMemo(
+    () => (code ? transformCodeForPreview(code) : PLACEHOLDER_CODE),
+    [code],
+  );
+
+  React.useEffect(() => {
+    setTransformedCode(transformedCodeMemo);
+  }, [transformedCodeMemo]);
+
+  React.useEffect(() => {
+    if (!code) {
+      setCodeError(null);
+      return;
+    }
+
+    try {
+      // Log for debugging
+      if (typeof window !== "undefined") {
+        console.log("[Preview] Original code:", code.substring(0, 100) + "...");
+        console.log(
+          "[Preview] Transformed code:",
+          transformedCodeMemo.substring(0, 100) + "...",
+        );
+        console.log("[Preview] Full transformed:", transformedCodeMemo);
+      }
+      setCodeError(null);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      setCodeError(`Transform error: ${errorMsg}`);
+      console.error("[Preview] Transform error:", errorMsg);
+    }
+  }, [code, transformedCodeMemo]);
 
   const handleCopy = async () => {
     if (code) {
@@ -20,21 +105,6 @@ export default function PreviewPanel({ code }: Props) {
       setTimeout(() => setCopied(false), 2000);
     }
   };
-
-  if (!code) {
-    return (
-      <div className="flex items-center justify-center h-full w-full bg-zinc-950">
-        <div className="text-center px-6">
-          <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-zinc-900 mx-auto mb-4">
-            <Eye className="h-8 w-8 text-zinc-600" />
-          </div>
-          <p className="text-zinc-400 text-sm">
-            Click "Preview" on a component to see code and preview
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-full w-full bg-zinc-950">
@@ -100,20 +170,29 @@ export default function PreviewPanel({ code }: Props) {
             </pre>
           </div>
         ) : (
-          // Preview Tab - Beautiful code display
-          <div className="w-full h-full overflow-auto p-4 bg-linear-to-b from-zinc-950 to-black">
-            <div className="bg-zinc-900 rounded-lg border border-zinc-800 overflow-hidden">
-              <div className="bg-zinc-800/50 px-4 py-3 border-b border-zinc-700">
-                <p className="text-xs font-medium text-zinc-400">
-                  Component Code
-                </p>
+          // Preview Tab - Live Component Preview
+          <div className="w-full h-full overflow-auto bg-linear-to-b from-zinc-950 via-zinc-900 to-black p-4">
+            {codeError ? (
+              <div className="p-4">
+                <ErrorMessage message={codeError} />
               </div>
-              <pre className="p-4 overflow-auto max-h-[calc(100vh-200px)]">
-                <code className="text-xs text-zinc-300 font-mono whitespace-pre-wrap leading-relaxed">
-                  {code}
-                </code>
-              </pre>
-            </div>
+            ) : (
+              <LiveProvider code={transformedCode} scope={getPreviewScope()}>
+                <div className="bg-zinc-900 rounded-lg border border-zinc-800 overflow-hidden h-full flex flex-col">
+                  <div className="bg-zinc-800/50 px-4 py-3 border-b border-zinc-700 shrink-0">
+                    <p className="text-xs font-medium text-zinc-400">
+                      Live Preview
+                    </p>
+                  </div>
+                  <div className="flex-1 overflow-auto p-6 bg-white">
+                    <Suspense fallback={<PreviewFallback />}>
+                      <LiveError />
+                      <LivePreview />
+                    </Suspense>
+                  </div>
+                </div>
+              </LiveProvider>
+            )}
           </div>
         )}
       </div>
