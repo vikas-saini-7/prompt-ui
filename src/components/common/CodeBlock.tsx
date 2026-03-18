@@ -25,12 +25,8 @@ export default function CodeBlock({
   };
 
   const handlePreview = () => {
-    console.log("Preview clicked, onPreview:", onPreview);
     if (onPreview) {
       onPreview(code);
-      console.log("onPreview called with code");
-    } else {
-      console.log("onPreview is undefined");
     }
   };
 

@@ -32,12 +32,20 @@ export default function PromptInput({
   const [showOptions, setShowOptions] = useState(false);
   const modelContainerRef = useRef<HTMLDivElement>(null);
   const optionsContainerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Memoize current model display name
   const currentModelName = useMemo(() => {
     const model = models.find((m) => m.id === selectedModel);
     return model?.name || selectedModel;
   }, [selectedModel, models]);
+
+  // Sync selectedModel state with initialModel prop
+  useEffect(() => {
+    if (initialModel && initialModel !== selectedModel) {
+      setSelectedModel(initialModel);
+    }
+  }, [initialModel]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -208,7 +216,10 @@ export default function PromptInput({
       </div>
 
       {/* Input Container */}
-      <div className="flex items-center gap-3 px-2 py-2 border border-zinc-800 bg-zinc-900 rounded-lg hover:border-zinc-700 transition-colors relative">
+      <div
+        onClick={() => inputRef.current?.focus()}
+        className="flex items-center gap-3 px-2 py-2 border border-zinc-800 bg-zinc-900 rounded-lg hover:border-zinc-700 transition-colors relative cursor-text"
+      >
         {/* Plus Icon Button with Dropdown */}
         <div ref={optionsContainerRef} className="relative">
           <button
@@ -246,6 +257,7 @@ export default function PromptInput({
 
         {/* Text Input */}
         <input
+          ref={inputRef}
           type="text"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
