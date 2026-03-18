@@ -109,17 +109,17 @@ export default function Toast({
         ${styles.bg} border ${styles.border} rounded-lg shadow-xl
         p-4 flex gap-3 items-start
         backdrop-blur-md
-        z-[9999]
+        z-9999
       `}
     >
-      <div className="flex-shrink-0">{styles.icon}</div>
+      <div className="shrink-0">{styles.icon}</div>
       <div className="flex-1 min-w-0">
         <h3 className="font-semibold text-white text-sm">{title}</h3>
         {message && <p className="text-xs text-zinc-300 mt-1">{message}</p>}
       </div>
       <button
         onClick={handleClose}
-        className="flex-shrink-0 hover:opacity-70 transition-opacity"
+        className="shrink-0 hover:opacity-70 transition-opacity"
       >
         <X className="h-4 w-4 text-zinc-400" />
       </button>

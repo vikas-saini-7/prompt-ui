@@ -83,6 +83,38 @@ export default function Sidebar({
           }))
         : [];
 
+  // Group conversations by date
+  const groupConversationsByDate = (convs: Conversation[]) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const grouped = {
+      Today: [] as Conversation[],
+      Yesterday: [] as Conversation[],
+      Older: [] as Conversation[],
+    };
+
+    convs.forEach((conv) => {
+      const convDate = new Date(conv.createdAt || new Date());
+      convDate.setHours(0, 0, 0, 0);
+
+      if (convDate.getTime() === today.getTime()) {
+        grouped.Today.push(conv);
+      } else if (convDate.getTime() === yesterday.getTime()) {
+        grouped.Yesterday.push(conv);
+      } else {
+        grouped.Older.push(conv);
+      }
+    });
+
+    return grouped;
+  };
+
+  const groupedConversations = groupConversationsByDate(items);
+
   return (
     <>
       {/* Overlay */}
@@ -136,43 +168,121 @@ export default function Sidebar({
                 No conversations yet
               </p>
             ) : (
-              items.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => onSelectConversation?.(item.id)}
-                  className={`group relative p-3 rounded-lg transition-colors text-left cursor-pointer ${
-                    currentConversationId === item.id
-                      ? "bg-zinc-900 border border-[#00E87B]"
-                      : "bg-zinc-900 hover:bg-zinc-800 border border-transparent"
-                  }`}
-                >
-                  <p className="text-xs text-zinc-400 truncate">
-                    {"createdAt" in item && item.createdAt
-                      ? new Date(item.createdAt as Date).toLocaleDateString()
-                      : "Today"}
-                  </p>
-                  <p className="text-sm text-white truncate mt-1">
-                    {item.title || "Untitled Conversation"}
-                  </p>
-                  {"preview" in item && item.preview && (
-                    <p className="text-xs text-zinc-500 truncate mt-1">
-                      {item.preview as string}
+              <>
+                {/* Today Section */}
+                {groupedConversations.Today.length > 0 && (
+                  <div>
+                    <p className="text-xs text-zinc-600 font-semibold px-2 py-2 uppercase tracking-wide">
+                      Today
                     </p>
-                  )}
+                    <div className="space-y-1">
+                      {groupedConversations.Today.map((item) => (
+                        <div
+                          key={item.id}
+                          onClick={() => onSelectConversation?.(item.id)}
+                          className={`group relative p-3 rounded-lg transition-colors text-left cursor-pointer flex items-center justify-between ${
+                            currentConversationId === item.id
+                              ? "bg-zinc-900 border border-[#00E87B]"
+                              : "bg-zinc-900 hover:bg-zinc-800 border border-transparent"
+                          }`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white truncate">
+                              {item.title || "Untitled Conversation"}
+                            </p>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteConfirmId(item.id);
+                            }}
+                            className="shrink-0 ml-2 p-1 hover:bg-red-900/30 rounded transition-colors"
+                            title="Delete conversation"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-                  {/* Delete Button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteConfirmId(item.id);
-                    }}
-                    className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-900/30 rounded"
-                    title="Delete conversation"
-                  >
-                    <Trash2 className="h-3 w-3 text-red-400" />
-                  </button>
-                </div>
-              ))
+                {/* Yesterday Section */}
+                {groupedConversations.Yesterday.length > 0 && (
+                  <div>
+                    <p className="text-xs text-zinc-600 font-semibold px-2 py-2 uppercase tracking-wide">
+                      Yesterday
+                    </p>
+                    <div className="space-y-1">
+                      {groupedConversations.Yesterday.map((item) => (
+                        <div
+                          key={item.id}
+                          onClick={() => onSelectConversation?.(item.id)}
+                          className={`group relative p-3 rounded-lg transition-colors text-left cursor-pointer flex items-center justify-between ${
+                            currentConversationId === item.id
+                              ? "bg-zinc-900 border border-[#00E87B]"
+                              : "bg-zinc-900 hover:bg-zinc-800 border border-transparent"
+                          }`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white truncate">
+                              {item.title || "Untitled Conversation"}
+                            </p>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteConfirmId(item.id);
+                            }}
+                            className="shrink-0 ml-2 p-1 hover:bg-red-900/30 rounded transition-colors"
+                            title="Delete conversation"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Older Section */}
+                {groupedConversations.Older.length > 0 && (
+                  <div>
+                    <p className="text-xs text-zinc-600 font-semibold px-2 py-2 uppercase tracking-wide">
+                      Older
+                    </p>
+                    <div className="space-y-1">
+                      {groupedConversations.Older.map((item) => (
+                        <div
+                          key={item.id}
+                          onClick={() => onSelectConversation?.(item.id)}
+                          className={`group relative p-3 rounded-lg transition-colors text-left cursor-pointer flex items-center justify-between ${
+                            currentConversationId === item.id
+                              ? "bg-zinc-900 border border-[#00E87B]"
+                              : "bg-zinc-900 hover:bg-zinc-800 border border-transparent"
+                          }`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white truncate">
+                              {item.title || "Untitled Conversation"}
+                            </p>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteConfirmId(item.id);
+                            }}
+                            className="shrink-0 ml-2 p-1 hover:bg-red-900/30 rounded transition-colors"
+                            title="Delete conversation"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

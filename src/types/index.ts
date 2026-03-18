@@ -11,6 +11,9 @@ export interface ChatMessage {
 export interface GenerationResponse {
   code: string;
   description?: string;
+  language?: string;
+  framework?: string;
+  tags?: string[];
 }
 
 export interface APIError {

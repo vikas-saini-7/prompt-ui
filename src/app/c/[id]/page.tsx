@@ -46,7 +46,7 @@ export default function Page({ params }: Props) {
     if (conversationId) {
       loadConversation(conversationId);
     }
-  }, [conversationId]);
+  }, [conversationId, loadConversation]);
 
   const isEmpty = messages.length === 0;
 
@@ -56,8 +56,8 @@ export default function Page({ params }: Props) {
     router.push("/");
   };
 
-  const handleGoToConversation = (id: string) => {
-    loadConversation(id);
+  const handleGoToConversation = async (id: string) => {
+    await loadConversation(id);
     setSidebarOpen(false);
     router.push(`/c/${id}`);
   };

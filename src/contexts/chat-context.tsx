@@ -14,6 +14,11 @@ import {
   deleteConversation as deleteConversationAction,
   getConversations,
 } from "@/actions/conversation.actions";
+import {
+  saveMessage,
+  getMessages,
+  saveGeneratedComponent,
+} from "@/actions/message.actions";
 
 interface ChatContextType {
   // State
@@ -128,20 +133,36 @@ export function ChatProvider({
   );
 
   const loadConversation = useCallback(
-    (id: string) => {
-      const conversation = conversations.find((c) => c.id === id);
-      if (conversation) {
+    async (id: string) => {
+      try {
+        const conversation = conversations.find((c) => c.id === id);
+        if (!conversation) return;
+
         setCurrentConversationId(id);
-        const msgs = conversation.messages || [];
-        setMessages(msgs);
+        setError(undefined);
+
+        // Fetch messages from database
+        const dbMessages = await getMessages(id);
+
+        // Convert DB messages to ChatMessage format
+        const chatMessages: ChatMessage[] = dbMessages.map((msg) => ({
+          id: msg.id,
+          type: msg.type,
+          content: msg.content,
+          code: msg.code,
+          timestamp: new Date(msg.createdAt),
+        }));
+
+        setMessages(chatMessages);
 
         // Find the last AI message with code and set it as preview
-        const lastCodeMessage = msgs.findLast(
+        const lastCodeMessage = chatMessages.findLast(
           (msg) => msg.type === "ai" && msg.code,
         );
         setSelectedCode(lastCodeMessage?.code);
-
-        setError(undefined);
+      } catch (err) {
+        console.error("Error loading conversation messages:", err);
+        setError("Failed to load conversation messages");
       }
     },
     [conversations],
@@ -192,7 +213,7 @@ export function ChatProvider({
           setCurrentConversationId(targetConvId);
         }
 
-        // Create messages
+        // Create user message object
         const userMessage: ChatMessage = {
           id: Date.now().toString(),
           type: "user",
@@ -200,16 +221,22 @@ export function ChatProvider({
           timestamp: new Date(),
         };
 
-        // Add user message
+        // Save user message to database
+        const userMessageId = await saveMessage(targetConvId, "user", prompt);
+
+        // Update message ID with DB ID
+        userMessage.id = userMessageId;
+
+        // Add user message to UI
         addMessage(userMessage);
 
-        // Call API
+        // Call API to generate component
         const response = await apiService.generateComponent(
           prompt,
           selectedModel,
         );
 
-        // Create AI message
+        // Create AI message object
         const aiMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           type: "ai",
@@ -218,9 +245,35 @@ export function ChatProvider({
           timestamp: new Date(),
         };
 
-        // Add AI message
+        // Save AI message to database
+        const aiMessageId = await saveMessage(
+          targetConvId,
+          "ai",
+          response.description || "Component generated successfully",
+          {
+            code: response.code,
+            codeLanguage: response.language || "jsx",
+          },
+        );
+
+        // Update message ID with DB ID
+        aiMessage.id = aiMessageId;
+
+        // Save generated component to database
+        await saveGeneratedComponent(targetConvId, aiMessageId, {
+          prompt,
+          code: response.code,
+          description: response.description,
+          aiModel: selectedModel,
+          language: response.language || "jsx",
+          framework: response.framework || "react",
+          tags: response.tags || [],
+        });
+
+        // Add AI message to UI
         addMessage(aiMessage);
 
+        // Set preview code
         setSelectedCode(response.code);
       } catch (err) {
         const errorMsg =
