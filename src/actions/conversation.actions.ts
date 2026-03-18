@@ -19,7 +19,6 @@ export async function createConversation(
     }
 
     const userId = session.user.id;
-    console.log("Creating conversation for user:", userId);
 
     // Create a new conversation in the database
     const newConversation = await ConversationModel.create({
@@ -27,8 +26,6 @@ export async function createConversation(
       title,
       description,
     });
-
-    console.log("Conversation created with ID:", newConversation._id);
 
     // Return the conversation ID as a string
     return newConversation._id.toString();
