@@ -136,7 +136,13 @@ export function ChatProvider({
     async (id: string) => {
       try {
         const conversation = conversations.find((c) => c.id === id);
-        if (!conversation) return;
+        if (!conversation) {
+          // Clear messages if conversation doesn't exist
+          setMessages([]);
+          setSelectedCode(undefined);
+          setError("Conversation not found");
+          return;
+        }
 
         setCurrentConversationId(id);
         setError(undefined);
@@ -163,6 +169,8 @@ export function ChatProvider({
       } catch (err) {
         console.error("Error loading conversation messages:", err);
         setError("Failed to load conversation messages");
+        setMessages([]);
+        setSelectedCode(undefined);
       }
     },
     [conversations],

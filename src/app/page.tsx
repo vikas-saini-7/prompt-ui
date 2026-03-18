@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useChat } from "@/hooks/useChat";
 import { useUI } from "@/hooks/useUI";
 import { useToast } from "@/hooks/useToast";
@@ -29,6 +30,11 @@ export default function Home() {
 
   const { sidebarOpen, toggleSidebar, setSidebarOpen } = useUI();
   const toast = useToast();
+
+  // Clear messages when navigating to home
+  useEffect(() => {
+    clearMessages();
+  }, [clearMessages]);
 
   const isEmpty = messages.length === 0;
 

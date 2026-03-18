@@ -48,6 +48,16 @@ export default function Page({ params }: Props) {
     }
   }, [conversationId, loadConversation]);
 
+  // Redirect to home if conversation is not found
+  useEffect(() => {
+    if (error?.includes("not found")) {
+      const timer = setTimeout(() => {
+        router.push("/");
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, router]);
+
   const isEmpty = messages.length === 0;
 
   const handleNewChat = async () => {
