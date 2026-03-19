@@ -178,10 +178,7 @@ export function ChatProvider({
       setSelectedCode(lastCodeMessage?.code);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      console.error(
-        "Error loading conversation messages:",
-        errorMessage,
-      );
+      console.error("Error loading conversation messages:", errorMessage);
 
       // Set specific error messages based on error type
       let displayError = "Failed to load conversation";
