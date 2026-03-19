@@ -34,8 +34,8 @@ export default function ChatContainer({
     requestAnimationFrame(scrollAndReset);
   }, [messages.length]);
 
-  // Show skeleton when loading initial conversation
-  if (isLoadingConversation && messages.length === 0) {
+  // Show skeleton when loading conversation (including when switching between conversations)
+  if (isLoadingConversation) {
     return <SkeletonLoader />;
   }
 
