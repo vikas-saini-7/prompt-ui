@@ -45,30 +45,68 @@ export async function getConversations(): Promise<
   }>
 > {
   try {
+    console.log("[getConversations-START] Fetching conversations");
     await connectDB();
+    console.log("[getConversations-DB] Database connected");
 
     const session = await getServerSession(authOptions);
+    console.log("[getConversations-AUTH] Session check:", {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      hasUserId: !!session?.user?.id,
+      userId: session?.user?.id,
+    });
+
     if (!session || !session.user || !session.user.id) {
+      console.error("[getConversations-ERROR] Authentication failed");
       throw new Error("User not authenticated");
     }
 
     const userId = session.user.id;
 
     // Fetch all conversations for the user
+    console.log(
+      "[getConversations-FETCH] Fetching conversations for userId:",
+      userId,
+    );
     const conversations = await ConversationModel.find({ userId }).sort({
       createdAt: -1,
     });
 
+    console.log("[getConversations-RESULT] Fetch result:", {
+      count: conversations.length,
+      conversationIds: conversations.map((c) => c._id.toString()),
+    });
+
     // Map to frontend format
-    return conversations.map((conv) => ({
+    const result = conversations.map((conv) => ({
       id: conv._id.toString(),
       title: conv.title,
       description: conv.description,
       createdAt: conv.createdAt,
       updatedAt: conv.updatedAt,
     }));
+
+    console.log(
+      "[getConversations-SUCCESS] Successfully fetched and mapped conversations:",
+      {
+        count: result.length,
+      },
+    );
+
+    return result;
   } catch (error) {
-    console.error("Error fetching conversations:", error);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : "";
+    console.error(
+      "[getConversations-ERROR-CATCH] Error fetching conversations:",
+      {
+        errorMsg,
+        errorStack,
+        errorType:
+          error instanceof Error ? error.constructor.name : typeof error,
+      },
+    );
     throw error;
   }
 }
