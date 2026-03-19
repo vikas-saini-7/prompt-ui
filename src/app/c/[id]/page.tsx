@@ -52,6 +52,8 @@ export default function Page({ params }: Props) {
     }
   }, [conversationId, loadConversation]);
 
+  const isEmpty = messages.length === 0 && !isLoadingConversation;
+
   // Redirect to home only if conversation is not found (not for auth errors)
   useEffect(() => {
     console.log("[Page-STATE] Current state:", {
@@ -77,8 +79,6 @@ export default function Page({ params }: Props) {
     isLoadingConversation,
     isEmpty,
   ]);
-
-  const isEmpty = messages.length === 0 && !isLoadingConversation;
 
   const handleNewChat = async () => {
     clearMessages();

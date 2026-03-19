@@ -2,27 +2,28 @@
 
 export default function SkeletonLoader() {
   return (
-    <div className="space-y-6 py-4">
-      {/* First skeleton block - User message */}
-      <div className="flex justify-end pr-4">
-        <div className="h-10 w-1/2 bg-gradient-to-r from-zinc-700 to-zinc-600 rounded-lg animate-pulse" />
+    <div className="space-y-4 py-4">
+      {/* Left message (AI) - multiple lines */}
+      <div className="space-y-2">
+        <div className="h-3 bg-zinc-700 rounded-full animate-pulse w-3/4" />
+        <div className="h-3 bg-zinc-700 rounded-full animate-pulse w-2/3" />
       </div>
 
-      {/* Second skeleton block - AI message */}
-      <div className="space-y-3 pl-4">
-        <div className="h-10 bg-gradient-to-r from-zinc-800 to-zinc-700 rounded-lg animate-pulse max-w-md" />
-        <div className="h-10 bg-gradient-to-r from-zinc-800 to-zinc-700 rounded-lg animate-pulse max-w-md" />
+      {/* Right message (User) - single line */}
+      <div className="flex justify-end">
+        <div className="h-3 bg-zinc-600 rounded-full animate-pulse w-1/3" />
       </div>
 
-      {/* Third skeleton block - User message */}
-      <div className="flex justify-end pr-4">
-        <div className="h-10 w-2/5 bg-gradient-to-r from-zinc-700 to-zinc-600 rounded-lg animate-pulse" />
+      {/* Left message (AI) - multiple lines */}
+      <div className="space-y-2">
+        <div className="h-3 bg-zinc-700 rounded-full animate-pulse w-4/5" />
+        <div className="h-3 bg-zinc-700 rounded-full animate-pulse w-1/2" />
+        <div className="h-3 bg-zinc-700 rounded-full animate-pulse w-2/3" />
       </div>
 
-      {/* Fourth skeleton block - AI message */}
-      <div className="space-y-3 pl-4">
-        <div className="h-10 bg-gradient-to-r from-zinc-800 to-zinc-700 rounded-lg animate-pulse max-w-md" />
-        <div className="h-10 bg-gradient-to-r from-zinc-800 to-zinc-700 rounded-lg animate-pulse max-w-md" />
+      {/* Right message (User) - single line */}
+      <div className="flex justify-end">
+        <div className="h-3 bg-zinc-600 rounded-full animate-pulse w-2/5" />
       </div>
     </div>
   );
