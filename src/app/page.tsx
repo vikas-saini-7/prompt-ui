@@ -46,7 +46,6 @@ export default function Home() {
   };
 
   const handleStartChat = async (prompt: string) => {
-    let conversationId: string | null = null;
     try {
       // Extract title from prompt: first sentence or first 50 chars, whichever comes first
       const titleEndIndex = Math.min(
@@ -56,7 +55,7 @@ export default function Home() {
       const conversationTitle = prompt.substring(0, titleEndIndex).trim();
 
       // Create conversation with title from prompt
-      conversationId = await createConversation(conversationTitle);
+      const conversationId = await createConversation(conversationTitle);
       if (!conversationId) {
         throw new Error("Failed to create conversation - no ID returned");
       }
@@ -79,16 +78,13 @@ export default function Home() {
         });
       }, 100);
     } catch (error) {
-      // Only show error for conversation creation
-      // If we have a conversationId, the error happened during generation (handled above)
-      if (!conversationId) {
-        const errorMsg =
-          error instanceof Error
-            ? error.message
-            : "Failed to create conversation";
-        console.error("Error starting chat:", error);
-        toast.error("Failed to start chat", errorMsg);
-      }
+      // Error creating conversation or during setup
+      const errorMsg =
+        error instanceof Error
+          ? error.message
+          : "Failed to create conversation";
+      console.error("Error starting chat:", error);
+      toast.error("Failed to start chat", errorMsg);
     }
   };
 
