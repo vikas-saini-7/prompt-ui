@@ -38,6 +38,7 @@ export default function Page({ params }: Props) {
     conversations,
     loadConversation,
     deleteConversation,
+    isLoadingConversations,
   } = useChat();
 
   const { sidebarOpen, toggleSidebar, setSidebarOpen } = useUI();
@@ -126,6 +127,7 @@ export default function Page({ params }: Props) {
         title="Conversations"
         maxHistoryItems={10}
         currentConversationId={conversationId}
+        isLoadingConversations={isLoadingConversations}
       />
 
       <div className="flex flex-1 overflow-hidden">

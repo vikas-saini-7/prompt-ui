@@ -27,6 +27,7 @@ export default function Home() {
     createConversation,
     conversations,
     deleteConversation,
+    isLoadingConversations,
   } = useChat();
 
   const { sidebarOpen, toggleSidebar, setSidebarOpen } = useUI();
@@ -122,6 +123,7 @@ export default function Home() {
         onDeleteConversation={handleDeleteConversation}
         title="Conversations"
         maxHistoryItems={10}
+        isLoadingConversations={isLoadingConversations}
       />
 
       {/* Main Content - Identical structure to conversation page */}

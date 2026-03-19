@@ -29,6 +29,7 @@ interface ChatContextType {
   messages: ChatMessage[];
   isLoading: boolean;
   isLoadingConversation: boolean;
+  isLoadingConversations: boolean;
   selectedCode?: string;
   error?: string;
   selectedModel: string;
@@ -73,6 +74,7 @@ export function ChatProvider({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
+  const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [selectedCode, setSelectedCode] = useState<string | undefined>();
   const [error, setError] = useState<string | undefined>();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -447,6 +449,7 @@ export function ChatProvider({
   useEffect(() => {
     const loadUserConversations = async () => {
       try {
+        setIsLoadingConversations(true);
         const userConversations = await getConversations();
         const mappedConversations: Conversation[] = userConversations.map(
           (conv) => ({
@@ -460,6 +463,8 @@ export function ChatProvider({
         setConversations(mappedConversations);
       } catch (err) {
         console.error("Failed to load conversations:", err);
+      } finally {
+        setIsLoadingConversations(false);
       }
     };
 
@@ -470,6 +475,7 @@ export function ChatProvider({
     messages,
     isLoading,
     isLoadingConversation,
+    isLoadingConversations,
     selectedCode,
     error,
     selectedModel: profile.defaultModel,

@@ -28,6 +28,7 @@ interface Props {
   title?: string;
   maxHistoryItems?: number;
   currentConversationId?: string;
+  isLoadingConversations?: boolean;
 }
 
 export default function Sidebar({
@@ -41,6 +42,7 @@ export default function Sidebar({
   title = "History",
   maxHistoryItems = 10,
   currentConversationId,
+  isLoadingConversations = false,
 }: Props) {
   const { data: session, status } = useSession();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -163,7 +165,16 @@ export default function Sidebar({
         {/* History List - Only show when logged in */}
         {session?.user?.email && (
           <div className="flex-1 overflow-y-auto px-3 space-y-2 min-h-0">
-            {items.length === 0 ? (
+            {isLoadingConversations ? (
+              // Skeleton loader for conversations
+              <div className="space-y-2 pt-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="p-3 rounded-lg bg-zinc-900 animate-pulse">
+                    <div className="h-4 bg-zinc-700 rounded w-3/4"></div>
+                  </div>
+                ))}
+              </div>
+            ) : items.length === 0 ? (
               <p className="text-xs text-zinc-500 text-center py-8">
                 No conversations yet
               </p>
