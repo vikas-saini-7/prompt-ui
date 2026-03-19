@@ -28,11 +28,8 @@ export async function signupWithEmail(
       return { error: "User with this email already exists" };
     }
 
-
-
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-
 
     // Create user - timestamps are auto-managed by Mongoose
     const newUser = await UserModel.create({
@@ -42,13 +39,9 @@ export async function signupWithEmail(
       provider: "credentials",
     });
 
-
-
     if (!newUser._id) {
       return { error: "Failed to create user" };
     }
-
-
 
     // Return success with email - client will handle signin and redirect
     return { success: true, email, password };

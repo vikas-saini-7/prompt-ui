@@ -24,8 +24,6 @@ export default function LoginPage() {
         redirect: false,
       });
 
-
-
       if (result?.error) {
         setError(result.error || "Invalid email or password");
         setLoading(false);

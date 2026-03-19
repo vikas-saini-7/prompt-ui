@@ -34,8 +34,6 @@ export default function SignupPage() {
             redirect: false,
           });
 
-
-
           if (signInResult?.error) {
             setError("Account created! Please sign in with your credentials.");
             setLoading(false);

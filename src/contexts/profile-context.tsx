@@ -60,7 +60,6 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
 
         // Validate that we got valid settings
         if (!userSettings || !userSettings.defaultModel) {
-  
           setProfile({
             defaultModel: getDefaultModelId(),
             theme: "dark",
