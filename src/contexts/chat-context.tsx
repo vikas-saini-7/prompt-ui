@@ -28,6 +28,7 @@ interface ChatContextType {
   // State
   messages: ChatMessage[];
   isLoading: boolean;
+  isLoadingConversation: boolean;
   selectedCode?: string;
   error?: string;
   selectedModel: string;
@@ -70,6 +71,7 @@ export function ChatProvider({
   const { profile, setDefaultModel } = useProfile();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingConversation, setIsLoadingConversation] = useState(false);
   const [selectedCode, setSelectedCode] = useState<string | undefined>();
   const [error, setError] = useState<string | undefined>();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -148,49 +150,41 @@ export function ChatProvider({
     [],
   );
 
-  const loadConversation = useCallback(
-    async (id: string) => {
-      try {
-        const conversation = conversations.find((c) => c.id === id);
-        if (!conversation) {
-          // Clear messages if conversation doesn't exist
-          setMessages([]);
-          setSelectedCode(undefined);
-          setError("Conversation not found");
-          return;
-        }
+  const loadConversation = useCallback(async (id: string) => {
+    try {
+      setIsLoadingConversation(true);
+      setCurrentConversationId(id);
+      setError(undefined);
 
-        setCurrentConversationId(id);
-        setError(undefined);
+      // Fetch messages from database
+      // This also validates that the conversation exists and belongs to the user
+      const dbMessages = await getMessages(id);
 
-        // Fetch messages from database
-        const dbMessages = await getMessages(id);
+      // Convert DB messages to ChatMessage format
+      const chatMessages: ChatMessage[] = dbMessages.map((msg) => ({
+        id: msg.id,
+        type: msg.type,
+        content: msg.content,
+        code: msg.code,
+        timestamp: new Date(msg.createdAt),
+      }));
 
-        // Convert DB messages to ChatMessage format
-        const chatMessages: ChatMessage[] = dbMessages.map((msg) => ({
-          id: msg.id,
-          type: msg.type,
-          content: msg.content,
-          code: msg.code,
-          timestamp: new Date(msg.createdAt),
-        }));
+      setMessages(chatMessages);
 
-        setMessages(chatMessages);
-
-        // Find the last AI message with code and set it as preview
-        const lastCodeMessage = chatMessages.findLast(
-          (msg) => msg.type === "ai" && msg.code,
-        );
-        setSelectedCode(lastCodeMessage?.code);
-      } catch (err) {
-        console.error("Error loading conversation messages:", err);
-        setError("Failed to load conversation messages");
-        setMessages([]);
-        setSelectedCode(undefined);
-      }
-    },
-    [conversations],
-  );
+      // Find the last AI message with code and set it as preview
+      const lastCodeMessage = chatMessages.findLast(
+        (msg) => msg.type === "ai" && msg.code,
+      );
+      setSelectedCode(lastCodeMessage?.code);
+    } catch (err) {
+      console.error("Error loading conversation messages:", err);
+      setError("Conversation not found or unauthorized");
+      setMessages([]);
+      setSelectedCode(undefined);
+    } finally {
+      setIsLoadingConversation(false);
+    }
+  }, []);
 
   const deleteConversation = useCallback(
     async (id: string): Promise<boolean> => {
@@ -254,17 +248,14 @@ export function ChatProvider({
         // Add user message to UI
         addMessage(userMessage);
 
-        // Create AI message object that will be updated as chunks arrive
+        // Create AI message object that will be added when generation completes
         const aiMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           type: "ai",
-          content: "Generating component...",
+          content: "",
           code: "",
           timestamp: new Date(),
         };
-
-        // Add initial AI message to UI
-        addMessage(aiMessage);
 
         // Stream code generation
         let generatedCode = "";
@@ -277,29 +268,16 @@ export function ChatProvider({
             profile.defaultModel,
             {
               onChunk: (chunk) => {
-                // Update AI message with accumulated code
+                // Accumulate and update preview with generated code
                 generatedCode += chunk;
                 const formattedCode = formatStreamedCode(generatedCode);
-
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === aiMessage.id
-                      ? {
-                          ...msg,
-                          code: formattedCode,
-                          content: `Generating component... (${formattedCode.length} characters)`,
-                        }
-                      : msg,
-                  ),
-                );
-
                 setSelectedCode(formattedCode);
               },
               onStart: () => {
-                // Already added initial message
+                // Generation started, loader will show
               },
               onComplete: () => {
-                // Will save after this callback
+                // Message will be added after this callback
               },
               onError: (errorMsg) => {
                 throw new Error(errorMsg);
@@ -317,7 +295,7 @@ export function ChatProvider({
         // Format final code
         const finalCode = formatStreamedCode(generatedCode);
 
-        // Update AI message with final state
+        // Save the generated component message
         const aiMessageId = await saveMessage(
           targetConvId,
           "ai",
@@ -328,19 +306,15 @@ export function ChatProvider({
           },
         );
 
-        // Update message in UI with final state
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === aiMessage.id
-              ? {
-                  ...msg,
-                  id: aiMessageId,
-                  content: generatedDescription,
-                  code: finalCode,
-                }
-              : msg,
-          ),
-        );
+        // Add AI message with final code to UI
+        const finalAiMessage: ChatMessage = {
+          id: aiMessageId,
+          type: "ai",
+          content: generatedDescription,
+          code: finalCode,
+          timestamp: new Date(),
+        };
+        addMessage(finalAiMessage);
 
         // Save generated component to database
         await saveGeneratedComponent(targetConvId, aiMessageId, {
@@ -411,6 +385,7 @@ export function ChatProvider({
   const value: ChatContextType = {
     messages,
     isLoading,
+    isLoadingConversation,
     selectedCode,
     error,
     selectedModel: profile.defaultModel,

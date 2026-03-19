@@ -4,16 +4,19 @@ import { useRef, useEffect } from "react";
 import { ChatMessage as ChatMessageType } from "@/types";
 import ChatMessage from "./ChatMessage";
 import Loader from "./Loader";
+import SkeletonLoader from "./SkeletonLoader";
 
 interface Props {
   messages: ChatMessageType[];
   isLoading?: boolean;
+  isLoadingConversation?: boolean;
   onPreview?: (code: string) => void;
 }
 
 export default function ChatContainer({
   messages,
   isLoading = false,
+  isLoadingConversation = false,
   onPreview,
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -30,6 +33,11 @@ export default function ChatContainer({
     // Use requestAnimationFrame to batch scroll at optimal time
     requestAnimationFrame(scrollAndReset);
   }, [messages.length]);
+
+  // Show skeleton when loading initial conversation
+  if (isLoadingConversation && messages.length === 0) {
+    return <SkeletonLoader />;
+  }
 
   return (
     <div className="flex flex-col gap-4">

@@ -26,6 +26,7 @@ export default function Page({ params }: Props) {
   const {
     messages,
     isLoading,
+    isLoadingConversation,
     selectedCode,
     error,
     selectedModel,
@@ -60,7 +61,7 @@ export default function Page({ params }: Props) {
     }
   }, [error, router]);
 
-  const isEmpty = messages.length === 0;
+  const isEmpty = messages.length === 0 && !isLoadingConversation;
 
   const handleNewChat = async () => {
     clearMessages();
@@ -132,6 +133,7 @@ export default function Page({ params }: Props) {
                   <ChatContainer
                     messages={messages}
                     isLoading={isLoading}
+                    isLoadingConversation={isLoadingConversation}
                     onPreview={setSelectedCode}
                   />
                 </div>
