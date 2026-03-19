@@ -69,38 +69,14 @@ export async function getMessages(conversationId: string): Promise<
   }>
 > {
   try {
-    console.log(
-      "[getMessages-START] Called with conversationId:",
-      conversationId,
-    );
-
     await connectDB();
-    console.log("[getMessages-DB] Database connected");
 
     const session = await getServerSession(authOptions);
-    console.log("[getMessages-AUTH] Session check:", {
-      hasSession: !!session,
-      hasUser: !!session?.user,
-      hasUserId: !!session?.user?.id,
-      userId: session?.user?.id,
-    });
-
     if (!session || !session.user || !session.user.id) {
-      console.error("[getMessages-ERROR] Authentication failed. Session:", {
-        hasSession: !!session,
-        hasUser: !!session?.user,
-        hasUserId: !!session?.user?.id,
-      });
       throw new Error("USER_NOT_AUTHENTICATED");
     }
 
     const userId = session.user.id;
-    console.log(
-      "[getMessages-VERIFY] Verifying conversation ownership. userId:",
-      userId,
-      "conversationId:",
-      conversationId,
-    );
 
     // Verify that the conversation belongs to the user
     const conversation = await ConversationModel.findOne({
@@ -108,50 +84,14 @@ export async function getMessages(conversationId: string): Promise<
       userId,
     });
 
-    console.log("[getMessages-CONV-CHECK] Conversation lookup result:", {
-      found: !!conversation,
-      conversationId,
-      userId,
-    });
-
     if (!conversation) {
-      console.error(
-        "[getMessages-ERROR] Conversation not found or unauthorized. Details:",
-        {
-          conversationId,
-          userId,
-          query: { _id: conversationId, userId },
-        },
-      );
       throw new Error("CONVERSATION_NOT_FOUND");
     }
 
     // Fetch all messages for the conversation
-    console.log("[getMessages-FETCH] Fetching messages with query:", {
-      conversationId,
-    });
-
     const messages = await MessageModel.find({ conversationId }).sort({
       createdAt: 1,
     });
-
-    // Log success
-    console.log(
-      "[getMessages-SUCCESS] Successfully fetched",
-      messages.length,
-      "messages. Details:",
-      {
-        conversationId,
-        messageCount: messages.length,
-        messages: messages.map((m) => ({
-          id: m._id.toString(),
-          type: m.type,
-          contentLength: m.content?.length || 0,
-          hasCode: !!m.code,
-        })),
-      },
-    );
-
     // Map to frontend format
     return messages.map((msg) => ({
       id: msg._id.toString(),
@@ -168,14 +108,7 @@ export async function getMessages(conversationId: string): Promise<
       createdAt: msg.createdAt.toISOString(),
     }));
   } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    const errorStack = error instanceof Error ? error.stack : "";
-    console.error("[getMessages-ERROR-CATCH] Error fetching messages:", {
-      conversationId,
-      errorMsg,
-      errorStack,
-      errorType: error instanceof Error ? error.constructor.name : typeof error,
-    });
+    console.error("Error fetching messages:", error);
     throw error;
   }
 }

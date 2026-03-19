@@ -47,7 +47,6 @@ export default function Page({ params }: Props) {
   // Load conversation when conversation ID changes
   useEffect(() => {
     if (conversationId) {
-      console.log("[Page-LOAD] Loading conversation with id:", conversationId);
       loadConversation(conversationId);
     }
   }, [conversationId, loadConversation]);
@@ -56,17 +55,6 @@ export default function Page({ params }: Props) {
 
   // Redirect to home only if conversation is not found (not for auth errors)
   useEffect(() => {
-    console.log("[Page-STATE] Current state:", {
-      conversationId,
-      messagesCount: messages.length,
-      isLoadingConversation,
-      isEmpty,
-      hasError: !!error,
-      error,
-    });
-
-    if (error?.includes("not have access")) {
-      const timer = setTimeout(() => {
         router.push("/");
       }, 2000);
       return () => clearTimeout(timer);

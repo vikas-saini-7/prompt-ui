@@ -152,19 +152,13 @@ export function ChatProvider({
 
   const loadConversation = useCallback(async (id: string) => {
     try {
-      console.log("[loadConversation-START] Loading conversation with id:", id);
       setIsLoadingConversation(true);
       setCurrentConversationId(id);
       setError(undefined);
 
       // Fetch messages from database
       // This also validates that the conversation exists and belongs to the user
-      console.log("[loadConversation-FETCH] Calling getMessages...");
       const dbMessages = await getMessages(id);
-      console.log("[loadConversation-FETCH-RESULT] getMessages returned:", {
-        count: dbMessages.length,
-        messages: dbMessages,
-      });
 
       // Convert DB messages to ChatMessage format
       const chatMessages: ChatMessage[] = dbMessages.map((msg) => ({
@@ -175,36 +169,18 @@ export function ChatProvider({
         timestamp: new Date(msg.createdAt),
       }));
 
-      console.log(
-        "[loadConversation-CONVERT] Converted to ChatMessage format:",
-        {
-          count: chatMessages.length,
-        },
-      );
-
       setMessages(chatMessages);
-      console.log("[loadConversation-SETMESSAGES] Messages state updated");
 
       // Find the last AI message with code and set it as preview
       const lastCodeMessage = chatMessages.findLast(
         (msg) => msg.type === "ai" && msg.code,
       );
       setSelectedCode(lastCodeMessage?.code);
-      console.log(
-        "[loadConversation-SUCCESS] Conversation loaded successfully. Message count:",
-        chatMessages.length,
-      );
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      const errorStack = err instanceof Error ? err.stack : "";
       console.error(
-        "[loadConversation-ERROR] Error loading conversation messages:",
-        {
-          conversationId: id,
-          errorMessage,
-          errorStack,
-          errorType: err instanceof Error ? err.constructor.name : typeof err,
-        },
+        "Error loading conversation messages:",
+        errorMessage,
       );
 
       // Set specific error messages based on error type

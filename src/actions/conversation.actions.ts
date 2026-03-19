@@ -45,9 +45,7 @@ export async function getConversations(): Promise<
   }>
 > {
   try {
-    console.log("[getConversations-START] Fetching conversations");
     await connectDB();
-    console.log("[getConversations-DB] Database connected");
 
     const session = await getServerSession(authOptions);
     console.log("[getConversations-AUTH] Session check:", {
