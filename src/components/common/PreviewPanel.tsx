@@ -60,7 +60,7 @@ const getPreviewScope = () => ({
 
 export default function PreviewPanel({ code }: Props) {
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<"preview" | "code">("preview");
+  const [activeTab, setActiveTab] = useState<"preview" | "code">("code");
   const [transformedCode, setTransformedCode] = useState(PLACEHOLDER_CODE);
   const [codeError, setCodeError] = useState<string | null>(null);
 
@@ -177,21 +177,9 @@ export default function PreviewPanel({ code }: Props) {
                 <ErrorMessage message={codeError} />
               </div>
             ) : (
-              <LiveProvider code={transformedCode} scope={getPreviewScope()}>
-                <div className="bg-zinc-900 rounded-lg border border-zinc-800 overflow-hidden h-full flex flex-col">
-                  <div className="bg-zinc-800/50 px-4 py-3 border-b border-zinc-700 shrink-0">
-                    <p className="text-xs font-medium text-zinc-400">
-                      Live Preview
-                    </p>
-                  </div>
-                  <div className="flex-1 overflow-auto p-6 bg-white">
-                    <Suspense fallback={<PreviewFallback />}>
-                      <LiveError />
-                      <LivePreview />
-                    </Suspense>
-                  </div>
+                <div className="w-full h-full flex items-center justify-center bg-linear-to-b from-zinc-950 via-zinc-900 to-black p-4">
+                  <span className="text-zinc-400 text-lg font-semibold">Preview coming soon</span>
                 </div>
-              </LiveProvider>
             )}
           </div>
         )}
