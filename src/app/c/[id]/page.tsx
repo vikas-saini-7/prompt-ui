@@ -51,12 +51,12 @@ export default function Page({ params }: Props) {
     }
   }, [conversationId, loadConversation]);
 
-  // Redirect to home if conversation is not found
+  // Redirect to home only if conversation is not found (not for auth errors)
   useEffect(() => {
-    if (error?.includes("not found")) {
+    if (error?.includes("not have access")) {
       const timer = setTimeout(() => {
         router.push("/");
-      }, 1000);
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [error, router]);

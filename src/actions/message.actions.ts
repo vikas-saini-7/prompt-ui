@@ -73,7 +73,12 @@ export async function getMessages(conversationId: string): Promise<
 
     const session = await getServerSession(authOptions);
     if (!session || !session.user || !session.user.id) {
-      throw new Error("User not authenticated");
+      console.error("[getMessages] Authentication failed. Session:", {
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        hasUserId: !!session?.user?.id,
+      });
+      throw new Error("USER_NOT_AUTHENTICATED");
     }
 
     const userId = session.user.id;
@@ -85,13 +90,25 @@ export async function getMessages(conversationId: string): Promise<
     });
 
     if (!conversation) {
-      throw new Error("Conversation not found or unauthorized");
+      console.error(
+        "[getMessages] Conversation not found or unauthorized:",
+        conversationId,
+      );
+      throw new Error("CONVERSATION_NOT_FOUND");
     }
 
     // Fetch all messages for the conversation
     const messages = await MessageModel.find({ conversationId }).sort({
       createdAt: 1,
     });
+
+    // Log success
+    console.log(
+      "[getMessages] Successfully fetched",
+      messages.length,
+      "messages for conversation",
+      conversationId,
+    );
 
     // Map to frontend format
     return messages.map((msg) => ({
@@ -109,7 +126,13 @@ export async function getMessages(conversationId: string): Promise<
       createdAt: msg.createdAt.toISOString(),
     }));
   } catch (error) {
-    console.error("Error fetching messages:", error);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error(
+      "[getMessages] Error fetching messages:",
+      errorMsg,
+      "conversationId:",
+      conversationId,
+    );
     throw error;
   }
 }

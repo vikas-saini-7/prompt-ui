@@ -177,8 +177,21 @@ export function ChatProvider({
       );
       setSelectedCode(lastCodeMessage?.code);
     } catch (err) {
-      console.error("Error loading conversation messages:", err);
-      setError("Conversation not found or unauthorized");
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error(
+        "[loadConversation] Error loading conversation messages:",
+        errorMessage,
+      );
+
+      // Set specific error messages based on error type
+      let displayError = "Failed to load conversation";
+      if (errorMessage.includes("USER_NOT_AUTHENTICATED")) {
+        displayError = "Your session has expired. Please login again.";
+      } else if (errorMessage.includes("CONVERSATION_NOT_FOUND")) {
+        displayError = "Conversation not found or you don't have access to it.";
+      }
+
+      setError(displayError);
       setMessages([]);
       setSelectedCode(undefined);
     } finally {
