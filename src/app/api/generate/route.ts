@@ -115,7 +115,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("API error:", error);
     const errorMsg =
       error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json({ error: errorMsg }, { status: 500 });

@@ -18,7 +18,6 @@ export class GroqProvider extends BaseLLMProvider {
       });
       return response.ok;
     } catch (error) {
-      console.error("Groq validation error:", error);
       return false;
     }
   }

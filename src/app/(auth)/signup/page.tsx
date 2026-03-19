@@ -26,7 +26,7 @@ export default function SignupPage() {
         setLoading(false);
       } else if (result?.success) {
         // Sign in the user after successful signup
-        console.log("User created, attempting client-side signin...");
+
         try {
           const signInResult = await signIn("credentials", {
             email: result.email,
@@ -34,7 +34,7 @@ export default function SignupPage() {
             redirect: false,
           });
 
-          console.log("Sign in result:", signInResult);
+
 
           if (signInResult?.error) {
             setError("Account created! Please sign in with your credentials.");

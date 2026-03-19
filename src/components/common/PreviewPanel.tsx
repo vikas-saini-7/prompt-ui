@@ -94,7 +94,7 @@ export default function PreviewPanel({ code }: Props) {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       setCodeError(`Transform error: ${errorMsg}`);
-      console.error("[Preview] Transform error:", errorMsg);
+        console.error("Preview transform error:", errorMsg);
     }
   }, [code, transformedCodeMemo]);
 

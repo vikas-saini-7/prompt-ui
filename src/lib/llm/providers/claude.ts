@@ -31,7 +31,6 @@ export class ClaudeProvider extends BaseLLMProvider {
       });
       return response.ok;
     } catch (error) {
-      console.error("Claude validation error:", error);
       return false;
     }
   }

@@ -132,7 +132,6 @@ export async function deleteMessage(messageId: string): Promise<void> {
     }
 
     await MessageModel.findByIdAndDelete(messageId);
-    console.log("Message deleted:", messageId);
   } catch (error) {
     console.error("Error deleting message:", error);
     throw error;

@@ -17,7 +17,6 @@ export class OpenAIProvider extends BaseLLMProvider {
       });
       return response.ok;
     } catch (error) {
-      console.error("OpenAI validation error:", error);
       return false;
     }
   }

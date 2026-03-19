@@ -52,7 +52,6 @@ const connectDB = async () => {
     await mongoose.connect(uri);
     return mongoose;
   } catch (error) {
-    console.error("MongoDB connection error:", error);
     throw error;
   }
 };

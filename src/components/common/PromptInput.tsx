@@ -241,7 +241,6 @@ export default function PromptInput({
                     key={option.id}
                     type="button"
                     onClick={() => {
-                      console.log(`${option.id} clicked`);
                       setShowOptions(false);
                     }}
                     className="w-full text-left px-3 py-2 text-xs text-zinc-400 hover:bg-zinc-800 hover:text-[#00E87B] transition-colors flex items-center gap-2 whitespace-nowrap"

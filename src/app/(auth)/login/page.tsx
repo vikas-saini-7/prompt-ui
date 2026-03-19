@@ -24,7 +24,7 @@ export default function LoginPage() {
         redirect: false,
       });
 
-      console.log("Sign in result:", result);
+
 
       if (result?.error) {
         setError(result.error || "Invalid email or password");
@@ -37,7 +37,6 @@ export default function LoginPage() {
         setLoading(false);
       }
     } catch (err: unknown) {
-      console.error("Login error:", err);
       setError("An error occurred. Please try again.");
       setLoading(false);
     }
@@ -50,7 +49,6 @@ export default function LoginPage() {
         redirectTo: "/",
       });
     } catch (err) {
-      console.error("Google login error:", err);
       setError("Google login failed. Please try again.");
     } finally {
       setLoading(false);
@@ -64,7 +62,6 @@ export default function LoginPage() {
         redirectTo: "/",
       });
     } catch (err) {
-      console.error("GitHub login error:", err);
       setError("GitHub login failed. Please try again.");
     } finally {
       setLoading(false);
