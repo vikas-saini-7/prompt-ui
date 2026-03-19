@@ -44,7 +44,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signIn("google", {
-        redirectTo: "/",
+        callbackUrl: "/",
       });
     } catch (err) {
       setError("Google login failed. Please try again.");
@@ -57,7 +57,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signIn("github", {
-        redirectTo: "/",
+        callbackUrl: "/",
       });
     } catch (err) {
       setError("GitHub login failed. Please try again.");

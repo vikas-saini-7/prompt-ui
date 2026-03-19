@@ -50,7 +50,8 @@ export async function getConversations(): Promise<
     const session = await getServerSession(authOptions);
 
     if (!session || !session.user || !session.user.id) {
-      throw new Error("User not authenticated");
+      // Not authenticated, return empty array
+      return [];
     }
 
     const userId = session.user.id;
