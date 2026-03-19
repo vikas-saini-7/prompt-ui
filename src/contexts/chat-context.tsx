@@ -369,7 +369,10 @@ export function ChatProvider({
         };
         addMessage(finalAiMessage);
 
-        // Save generated component to database
+        // Clear loading state immediately after message appears
+        setIsLoading(false);
+
+        // Save generated component to database (non-critical, happens in background)
         try {
           await saveGeneratedComponent(targetConvId, aiMessageId, {
             prompt,
@@ -392,7 +395,6 @@ export function ChatProvider({
           err instanceof Error ? err.message : "Failed to generate component";
         setError(errorMsg);
         console.error("Generation error:", err);
-      } finally {
         setIsLoading(false);
       }
     },
