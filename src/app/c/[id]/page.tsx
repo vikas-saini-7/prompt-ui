@@ -76,8 +76,9 @@ export default function Page({ params }: Props) {
   };
 
   const handleGoToConversation = async (id: string) => {
-    await loadConversation(id);
     setSidebarOpen(false);
+    // Let the page's useEffect handle loading when route changes
+    // This prevents double-loading when router.push triggers a re-render
     router.push(`/c/${id}`);
   };
 
