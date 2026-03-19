@@ -293,7 +293,11 @@ export function ChatProvider({
 
         // Save user message to database in the background
         try {
-          const savedMessageId = await saveMessage(targetConvId, "user", prompt);
+          const savedMessageId = await saveMessage(
+            targetConvId,
+            "user",
+            prompt,
+          );
           if (!savedMessageId) {
             throw new Error("Failed to save user message - no ID returned");
           }
