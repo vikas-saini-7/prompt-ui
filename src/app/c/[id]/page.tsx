@@ -53,20 +53,15 @@ export default function Page({ params }: Props) {
 
   const isEmpty = messages.length === 0 && !isLoadingConversation;
 
-  // Redirect to home only if conversation is not found (not for auth errors)
+  // Handle errors: Show error if conversation failed to load
   useEffect(() => {
+    if (error && error.includes("not found")) {
+      const timer = setTimeout(() => {
         router.push("/");
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [
-    error,
-    router,
-    conversationId,
-    messages.length,
-    isLoadingConversation,
-    isEmpty,
-  ]);
+  }, [error, router]);
 
   const handleNewChat = async () => {
     clearMessages();

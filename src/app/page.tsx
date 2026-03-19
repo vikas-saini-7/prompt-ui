@@ -46,19 +46,50 @@ export default function Home() {
   };
 
   const handleStartChat = async (prompt: string) => {
-    // Extract title from prompt: first sentence or first 50 chars, whichever comes first
-    const titleEndIndex = Math.min(
-      prompt.search(/[.!?\n]/) > 0 ? prompt.search(/[.!?\n]/) : prompt.length,
-      50,
-    );
-    const conversationTitle = prompt.substring(0, titleEndIndex).trim();
+    let conversationId: string | null = null;
+    try {
+      // Extract title from prompt: first sentence or first 50 chars, whichever comes first
+      const titleEndIndex = Math.min(
+        prompt.search(/[.!?\n]/) > 0 ? prompt.search(/[.!?\n]/) : prompt.length,
+        50,
+      );
+      const conversationTitle = prompt.substring(0, titleEndIndex).trim();
 
-    // Create conversation with title from prompt
-    const conversationId = await createConversation(conversationTitle);
-    // Redirect immediately (before API call) - this makes navigation instant
-    router.push(`/c/${conversationId}`);
-    // Generate component in background (will add messages to existing conversation)
-    generateComponent(prompt, conversationId);
+      // Create conversation with title from prompt
+      conversationId = await createConversation(conversationTitle);
+      if (!conversationId) {
+        throw new Error("Failed to create conversation - no ID returned");
+      }
+
+      // Redirect immediately (before generation) - this makes navigation instant
+      router.push(`/c/${conversationId}`);
+
+      // Generate component and wait for it to complete
+      // This ensures user message is saved before we consider the operation successful
+      try {
+        await generateComponent(prompt, conversationId);
+      } catch (genError) {
+        // Log generation error but don't re-throw
+        // User is already on the conversation page
+        const genErrorMsg =
+          genError instanceof Error
+            ? genError.message
+            : "Failed to generate component";
+        console.error("Generation error in background:", genErrorMsg);
+        // Toast will be shown via context when error state is set
+      }
+    } catch (error) {
+      // Only show error for conversation creation
+      // If we have a conversationId, the error happened during generation (handled above)
+      if (!conversationId) {
+        const errorMsg =
+          error instanceof Error
+            ? error.message
+            : "Failed to create conversation";
+        console.error("Error starting chat:", error);
+        toast.error("Failed to start chat", errorMsg);
+      }
+    }
   };
 
   const handleGoToConversation = (id: string) => {

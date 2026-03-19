@@ -228,12 +228,31 @@ export function ChatProvider({
         setError(undefined);
         setIsLoading(true);
 
+        // Validate profile is available before proceeding
+        if (!profile || !profile.defaultModel) {
+          throw new Error(
+            "Profile or default model not loaded. Please refresh and try again.",
+          );
+        }
+
         // Determine target conversation ID
         let targetConvId = conversationId || currentConversationId;
 
         // Create conversation if none exists
         if (!targetConvId) {
-          targetConvId = await createConversation();
+          try {
+            targetConvId = await createConversation();
+            if (!targetConvId) {
+              throw new Error("Failed to create conversation - no ID returned");
+            }
+          } catch (createError) {
+            const errorMsg =
+              createError instanceof Error
+                ? createError.message
+                : "Failed to create conversation";
+            setError(errorMsg);
+            throw createError;
+          }
         }
 
         // Ensure current conversation is set to target
@@ -250,22 +269,26 @@ export function ChatProvider({
         };
 
         // Save user message to database
-        const userMessageId = await saveMessage(targetConvId, "user", prompt);
+        let userMessageId: string;
+        try {
+          userMessageId = await saveMessage(targetConvId, "user", prompt);
+          if (!userMessageId) {
+            throw new Error("Failed to save user message - no ID returned");
+          }
+        } catch (saveError) {
+          const errorMsg =
+            saveError instanceof Error
+              ? saveError.message
+              : "Failed to save user message";
+          setError(errorMsg);
+          throw saveError;
+        }
 
         // Update message ID with DB ID
         userMessage.id = userMessageId;
 
         // Add user message to UI
         addMessage(userMessage);
-
-        // Create AI message object that will be added when generation completes
-        const aiMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          type: "ai",
-          content: "",
-          code: "",
-          timestamp: new Date(),
-        };
 
         // Stream code generation
         let generatedCode = "";
@@ -299,6 +322,7 @@ export function ChatProvider({
             streamError instanceof Error
               ? streamError.message
               : "Failed to generate code";
+          setError(errorMsg);
           throw new Error(errorMsg);
         }
 
@@ -306,15 +330,28 @@ export function ChatProvider({
         const finalCode = formatStreamedCode(generatedCode);
 
         // Save the generated component message
-        const aiMessageId = await saveMessage(
-          targetConvId,
-          "ai",
-          generatedDescription,
-          {
-            code: finalCode,
-            codeLanguage: "jsx",
-          },
-        );
+        let aiMessageId: string;
+        try {
+          aiMessageId = await saveMessage(
+            targetConvId,
+            "ai",
+            generatedDescription,
+            {
+              code: finalCode,
+              codeLanguage: "jsx",
+            },
+          );
+          if (!aiMessageId) {
+            throw new Error("Failed to save AI message - no ID returned");
+          }
+        } catch (saveError) {
+          const errorMsg =
+            saveError instanceof Error
+              ? saveError.message
+              : "Failed to save generated message";
+          setError(errorMsg);
+          throw saveError;
+        }
 
         // Add AI message with final code to UI
         const finalAiMessage: ChatMessage = {
@@ -327,15 +364,20 @@ export function ChatProvider({
         addMessage(finalAiMessage);
 
         // Save generated component to database
-        await saveGeneratedComponent(targetConvId, aiMessageId, {
-          prompt,
-          code: finalCode,
-          description: generatedDescription,
-          aiModel: profile.defaultModel,
-          language: "jsx",
-          framework: "react",
-          tags: ["generated"],
-        });
+        try {
+          await saveGeneratedComponent(targetConvId, aiMessageId, {
+            prompt,
+            code: finalCode,
+            description: generatedDescription,
+            aiModel: profile.defaultModel,
+            language: "jsx",
+            framework: "react",
+            tags: ["generated"],
+          });
+        } catch (componentError) {
+          // Log but don't fail - component metadata saving is not critical
+          console.error("Failed to save component metadata:", componentError);
+        }
 
         // Set final preview code
         setSelectedCode(finalCode);
