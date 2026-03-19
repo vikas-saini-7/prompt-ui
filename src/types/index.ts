@@ -6,6 +6,8 @@ export interface ChatMessage {
   content: string;
   code?: string;
   timestamp: Date;
+  isSaving?: boolean; // Indicates message is being saved to DB
+  error?: string; // Error message if save failed
 }
 
 export interface GenerationResponse {

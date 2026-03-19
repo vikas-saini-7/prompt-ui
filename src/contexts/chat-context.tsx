@@ -38,6 +38,7 @@ interface ChatContextType {
   // Actions
   addMessage: (message: ChatMessage) => void;
   addMessages: (messages: ChatMessage[]) => void;
+  updateMessage: (messageId: string, updates: Partial<ChatMessage>) => void;
   clearMessages: () => void;
   setLoading: (loading: boolean) => void;
   setSelectedCode: (code?: string) => void;
@@ -103,6 +104,17 @@ export function ChatProvider({
   const addMessages = useCallback((newMessages: ChatMessage[]) => {
     setMessages((prev) => [...prev, ...newMessages]);
   }, []);
+
+  const updateMessage = useCallback(
+    (messageId: string, updates: Partial<ChatMessage>) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId ? { ...msg, ...updates } : msg,
+        ),
+      );
+    },
+    [],
+  );
 
   const clearMessages = useCallback(() => {
     setMessages([]);
@@ -266,35 +278,43 @@ export function ChatProvider({
           setCurrentConversationId(targetConvId);
         }
 
-        // Create user message object
+        // Create user message object with temporary ID and isSaving flag
+        const userMessageId = Date.now().toString();
         const userMessage: ChatMessage = {
-          id: Date.now().toString(),
+          id: userMessageId,
           type: "user",
           content: prompt,
           timestamp: new Date(),
+          isSaving: true,
         };
 
-        // Save user message to database
-        let userMessageId: string;
+        // Add user message to UI immediately (optimistic update)
+        addMessage(userMessage);
+
+        // Save user message to database in the background
         try {
-          userMessageId = await saveMessage(targetConvId, "user", prompt);
-          if (!userMessageId) {
+          const savedMessageId = await saveMessage(targetConvId, "user", prompt);
+          if (!savedMessageId) {
             throw new Error("Failed to save user message - no ID returned");
           }
+          // Update message with real DB ID and remove saving flag
+          updateMessage(userMessageId, {
+            id: savedMessageId,
+            isSaving: false,
+          });
         } catch (saveError) {
           const errorMsg =
             saveError instanceof Error
               ? saveError.message
               : "Failed to save user message";
-          setError(errorMsg);
-          throw saveError;
+          console.error("Error saving user message:", errorMsg);
+          // Update message with error
+          updateMessage(userMessageId, {
+            isSaving: false,
+            error: errorMsg,
+          });
+          // Don't throw - let generation continue, but show error in message
         }
-
-        // Update message ID with DB ID
-        userMessage.id = userMessageId;
-
-        // Add user message to UI
-        addMessage(userMessage);
 
         // Stream code generation
         let generatedCode = "";
@@ -453,6 +473,7 @@ export function ChatProvider({
     currentConversation,
     addMessage,
     addMessages,
+    updateMessage,
     clearMessages,
     setLoading: setIsLoading,
     setSelectedCode,

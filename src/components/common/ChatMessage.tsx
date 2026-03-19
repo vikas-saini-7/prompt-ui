@@ -1,7 +1,7 @@
 "use client";
 
 import { ChatMessage as ChatMessageType } from "@/types";
-import { Bot } from "lucide-react";
+import { Bot, AlertCircle } from "lucide-react";
 import CodeBlock from "./CodeBlock";
 
 interface Props {
@@ -25,9 +25,25 @@ export default function ChatMessage({ message, onPreview }: Props) {
 
         <div className={`flex flex-col gap-2 min-w-0`}>
           {isUser ? (
-            <div className="rounded-lg bg-[#00E87B] px-4 py-2 w-fit">
-              <p className="text-sm text-black">{message.content}</p>
-            </div>
+            <>
+              <div className="rounded-lg bg-[#00E87B] px-4 py-2 w-fit">
+                <p className="text-sm text-black">{message.content}</p>
+              </div>
+              
+              {message.isSaving && (
+                <div className="text-xs text-zinc-500 flex items-center gap-1">
+                  <div className="w-2 h-2 bg-zinc-500 rounded-full animate-pulse"></div>
+                  Saving...
+                </div>
+              )}
+              
+              {message.error && (
+                <div className="bg-red-900/20 border border-red-800 rounded px-2 py-1 flex items-center gap-2">
+                  <AlertCircle className="h-3 w-3 text-red-400 shrink-0" />
+                  <p className="text-xs text-red-400">{message.error}</p>
+                </div>
+              )}
+            </>
           ) : (
             <>
               <p className="text-sm text-zinc-300">{message.content}</p>
