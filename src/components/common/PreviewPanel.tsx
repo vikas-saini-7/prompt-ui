@@ -177,9 +177,11 @@ export default function PreviewPanel({ code }: Props) {
                 <ErrorMessage message={codeError} />
               </div>
             ) : (
-                <div className="w-full h-full flex items-center justify-center bg-linear-to-b from-zinc-950 via-zinc-900 to-black p-4">
-                  <span className="text-zinc-400 text-lg font-semibold">Preview coming soon</span>
-                </div>
+              <div className="w-full h-full flex items-center justify-center bg-linear-to-b from-zinc-950 via-zinc-900 to-black p-4">
+                <span className="text-zinc-400 text-lg font-semibold">
+                  Preview coming soon
+                </span>
+              </div>
             )}
           </div>
         )}
