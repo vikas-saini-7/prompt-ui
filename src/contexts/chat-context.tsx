@@ -234,7 +234,7 @@ export function ChatProvider({
             "User profile not found. Please refresh and try again.",
           );
         }
-        
+
         if (!profile.defaultModel) {
           throw new Error(
             "No LLM model selected. Please configure a model and try again.",

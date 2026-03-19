@@ -57,7 +57,7 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
       try {
         setIsProfileLoading(true);
         const userSettings = await getUserSettings();
-        
+
         // Validate that we got valid settings
         if (!userSettings || !userSettings.defaultModel) {
           console.warn("Invalid user settings received, using defaults");
@@ -78,7 +78,9 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
         console.error("Failed to load user profile:", error);
         // Keep defaults if loading fails
         const defaultModel = getDefaultModelId();
-        console.warn(`Using fallback profile with default model: ${defaultModel}`);
+        console.warn(
+          `Using fallback profile with default model: ${defaultModel}`,
+        );
         setProfile({
           defaultModel,
           theme: "dark",
