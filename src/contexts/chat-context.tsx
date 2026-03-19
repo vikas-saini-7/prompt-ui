@@ -228,10 +228,16 @@ export function ChatProvider({
         setError(undefined);
         setIsLoading(true);
 
-        // Validate profile is available before proceeding
-        if (!profile || !profile.defaultModel) {
+        // Validate profile is available and has a default model
+        if (!profile) {
           throw new Error(
-            "Profile or default model not loaded. Please refresh and try again.",
+            "User profile not found. Please refresh and try again.",
+          );
+        }
+        
+        if (!profile.defaultModel) {
+          throw new Error(
+            "No LLM model selected. Please configure a model and try again.",
           );
         }
 

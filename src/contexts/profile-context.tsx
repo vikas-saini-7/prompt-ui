@@ -57,15 +57,33 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
       try {
         setIsProfileLoading(true);
         const userSettings = await getUserSettings();
-        setProfile({
-          defaultModel: userSettings.defaultModel,
-          theme: userSettings.theme,
-          autoSaveConversations: userSettings.autoSaveConversations,
-        });
+        
+        // Validate that we got valid settings
+        if (!userSettings || !userSettings.defaultModel) {
+          console.warn("Invalid user settings received, using defaults");
+          setProfile({
+            defaultModel: getDefaultModelId(),
+            theme: "dark",
+            autoSaveConversations: true,
+          });
+        } else {
+          setProfile({
+            defaultModel: userSettings.defaultModel,
+            theme: userSettings.theme,
+            autoSaveConversations: userSettings.autoSaveConversations,
+          });
+        }
         setIsProfileLoaded(true);
       } catch (error) {
         console.error("Failed to load user profile:", error);
         // Keep defaults if loading fails
+        const defaultModel = getDefaultModelId();
+        console.warn(`Using fallback profile with default model: ${defaultModel}`);
+        setProfile({
+          defaultModel,
+          theme: "dark",
+          autoSaveConversations: true,
+        });
         setIsProfileLoaded(true);
       } finally {
         setIsProfileLoading(false);

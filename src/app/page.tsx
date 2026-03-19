@@ -61,23 +61,23 @@ export default function Home() {
         throw new Error("Failed to create conversation - no ID returned");
       }
 
-      // Redirect immediately (before generation) - this makes navigation instant
+      // Redirect to conversation page
       router.push(`/c/${conversationId}`);
 
-      // Generate component and wait for it to complete
-      // This ensures user message is saved before we consider the operation successful
-      try {
-        await generateComponent(prompt, conversationId);
-      } catch (genError) {
-        // Log generation error but don't re-throw
-        // User is already on the conversation page
-        const genErrorMsg =
-          genError instanceof Error
-            ? genError.message
-            : "Failed to generate component";
-        console.error("Generation error in background:", genErrorMsg);
-        // Toast will be shown via context when error state is set
-      }
+      // Generate component after a short delay to ensure page transition
+      // This ensures smooth navigation and that profile is loaded on target page
+      setTimeout(() => {
+        generateComponent(prompt, conversationId).catch((genError) => {
+          // Log generation error but don't re-throw
+          // User is already on the conversation page
+          const genErrorMsg =
+            genError instanceof Error
+              ? genError.message
+              : "Failed to generate component";
+          console.error("Generation error:", genErrorMsg);
+          // Toast will be shown via context when error state is set
+        });
+      }, 100);
     } catch (error) {
       // Only show error for conversation creation
       // If we have a conversationId, the error happened during generation (handled above)

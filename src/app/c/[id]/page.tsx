@@ -53,15 +53,21 @@ export default function Page({ params }: Props) {
 
   const isEmpty = messages.length === 0 && !isLoadingConversation;
 
-  // Handle errors: Show error if conversation failed to load
+  // Handle errors: Show toast for generation errors, redirect for conversation not found
   useEffect(() => {
-    if (error && error.includes("not found")) {
-      const timer = setTimeout(() => {
-        router.push("/");
-      }, 2000);
-      return () => clearTimeout(timer);
+    if (error) {
+      if (error.includes("not found")) {
+        // Conversation not found - redirect to home
+        const timer = setTimeout(() => {
+          router.push("/");
+        }, 2000);
+        return () => clearTimeout(timer);
+      } else {
+        // Generation error - show toast
+        toast.error("Generation Error", error);
+      }
     }
-  }, [error, router]);
+  }, [error, router, toast]);
 
   const handleNewChat = async () => {
     clearMessages();
@@ -92,6 +98,16 @@ export default function Page({ params }: Props) {
         "Could not delete the conversation. Please try again.",
       );
       console.error("Error deleting conversation:", err);
+    }
+  };
+
+  const handleGenerateComponent = async (prompt: string) => {
+    try {
+      await generateComponent(prompt, conversationId);
+    } catch (err) {
+      const errMsg =
+        err instanceof Error ? err.message : "Failed to generate component";
+      console.error("Error generating component:", errMsg);
     }
   };
 
@@ -152,7 +168,7 @@ export default function Page({ params }: Props) {
               className={`bg-[#0F0F0F] px-3 sm:px-4 py-4 shrink-0 ${!isEmpty ? "border-t border-zinc-800" : ""}`}
             >
               <PromptInput
-                onSubmit={generateComponent}
+                onSubmit={handleGenerateComponent}
                 isLoading={isLoading}
                 selectedModel={selectedModel}
                 onModelChange={setSelectedModel}
